@@ -1736,6 +1736,75 @@ ifelse(convex.in.f.inputs,  paste0("display Cmat.l"), "")
   )
 
 
+
+
+
+
+gdx.output.file <- paste0("sgmGMEnonlinearRegimes", strsplit(target.crop, " ")[[1]][1], 
+     formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor  , "-param-output.txt") 
+
+
+
+err.grid <- expand.grid( 1:3, 1:nrow(combined.df))
+
+
+
+err.term.put <- paste0( 
+  rep(paste0("put \"w", all.eqns, ",\" w", all.eqns, ".l"), 
+    each=nrow(err.grid)),
+  paste0("(\"", err.grid[, 2], "\",\"", err.grid[, 1], "\") /;")
+)
+
+#Smat.grid <- expand.grid( 1:(N-1), 1:(N-1))
+
+#Smat.grid.put <- paste0( 
+#  "put \"", "Smat", ",\" ", "Smat", ".l",
+#  paste0("(\"", Smat.grid[, 1], "\",\"", Smat.grid[, 2], "\") /;")
+#)
+
+
+
+
+
+
+gdx.like.output.lines <- c(
+paste0("file output /", gdx.output.file, "/;"),
+"output.nr = 2  ; /* 'rounding option' used to force e format */",
+"output.nd = 15 ; /* or larger */ ",
+"output.nw = 0  ; /* width as required */ ",
+"put output;" ,
+paste0("put \"", all.params, ",\" ", all.params, ".l /;"),
+paste0( 
+  rep(paste0("put \"p", all.params[!grepl("xi", all.params)], ",\" p", all.params[!grepl("xi", all.params)], ".l"), 
+    each=length(other.param.support)),
+  paste0("(\"", 1:length(other.param.support), "\") /;")
+),
+paste0( 
+  rep(paste0("put \"p", all.params[grepl("xi", all.params)], ",\" p", all.params[grepl("xi", all.params)], ".l"), 
+    each=length(xi.param.support)),
+  paste0("(\"", 1:length(xi.param.support), "\") /;")
+),
+err.term.put ,
+# THEN DO VAR.COV DISPLAY
+#Smat.grid.put,
+"putclose;"
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if (!convex.in.f.inputs) {
   Cmat.transpose.restriction.defn <- ""
   convex.restriction.defn <- ""
@@ -1769,7 +1838,8 @@ completed.GAMS.file <-  c(
   convex.restriction.defn, " ", 
   covar.SUR.lines,
   final.lines, " ",
-  parameter.display.lines
+  parameter.display.lines, " ",
+  gdx.like.output.lines
 )
 
 

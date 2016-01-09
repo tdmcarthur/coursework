@@ -5,7 +5,7 @@
 
 
 
-target.top.crop.number <- 2
+target.top.crop.number <- 1
 
 #Including zero cost:
 #Potatoes	4,058
@@ -17,7 +17,7 @@ target.top.crop.number <- 2
 M <- 1
 N <- 6
 # J <- 3
- J <- 6
+J <- 6
 
 
 
@@ -403,6 +403,7 @@ run.nonlinear.from.shell <-paste0("cd ", GAMS.projdir, "\n",
 
 system(run.nonlinear.from.shell)
 
+do.regimes <- TRUE
 
 
 if ( do.regimes) {

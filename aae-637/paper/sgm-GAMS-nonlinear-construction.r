@@ -1421,7 +1421,7 @@ Cmat.initial.values,
 #share.denom.initial,
 "* primal approach",
 "model gme /all/;",
-"options domlim=5000;",
+"options domlim=50000;", # Changing from 5,000 to 50,000 now since the function eval problems are tripping up GAMS now
 "*options seed=5;",
 "*options iterlim=0;",
 "*option bratio=1;",

@@ -127,7 +127,7 @@ total.sum.sq[[targ.eqn]] <- regression.nls$value
 # NOTE: Ok, we are going to go with just using the range:
 max.resid <- (ifelse(targ.eqn == (N + 1),  max(E.y01.data), 
                      max(get(paste0("x", lead.zero(targ.eqn)))/y01)))
-err.support.dem.eqns[[targ.eqn]] <- round( c(-max.resid, 0, max.resid) * 1.5, digits=4)
+err.support.dem.eqns[[targ.eqn]] <- round( c(-max.resid, 0, max.resid) * 1.75, digits=4)
 
 #max.abs.other.param <- max(c(max.abs.other.param, abs(regression.tobit$par[-1])))
 # Also, the above MLE tobit does not equal the marginal effects, so taking the parameter
