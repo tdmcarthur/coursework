@@ -2,27 +2,57 @@
 
 library("lfe")
 
+# Monte Carlo
+
 set.seed(1000)
-n.obs <- 100000
-x <- rnorm(n.obs)
-y <- x + rnorm(n.obs)
+n.obs <- 5000
+m.iterations <- 1000
 
-x.star.1 <- x + rnorm(n.obs)
-x.star.2 <- x + rnorm(n.obs)
-x.star.3 <- x + rnorm(n.obs)
-x.star.4 <- x + rnorm(n.obs)
+ret.mat <- matrix(NA, ncol = 3, nrow = m.iterations)
 
-# OLS
-summary(lm(y ~ x.star.1))
-summary(lm(y ~ x.star.2))
-summary(lm(y ~ I((x.star.1 + x.star.2)/2)))
+for (iter in 1:m.iterations) {
 
-# GMM
-summary(felm(y ~ 1 | 0 | (x.star.1 ~ x.star.2)))
-summary(felm(y ~ 1 | 0 | (x.star.1 ~ x.star.1 + x.star.1)))
-summary(felm(y ~ 1 | 0 | (x.star.1 ~ x.star.2 + x.star.3 +  x.star.4)))
-summary(felm(y ~ 1 | 0 | (x.star.1 ~ I((x.star.2 + x.star.3 + x.star.4)/3))))
 
+  x <- rnorm(n.obs)
+  y <- x + rnorm(n.obs)
+
+  x.star.1 <- x + rnorm(n.obs)
+  x.star.2 <- x + rnorm(n.obs)
+  x.star.3 <- x + rnorm(n.obs)
+  x.star.4 <- x + rnorm(n.obs)
+  x.star.5 <- x + rnorm(n.obs)
+  x.star.6 <- x + rnorm(n.obs)
+
+  # OLS
+  #summary(lm(y ~ x.star.1))
+  #summary(lm(y ~ x.star.2))
+  #summary(lm(y ~ I((x.star.1 + x.star.2)/2)))
+  #summary(lm(y ~ I((x.star.1 + x.star.2 + x.star.3)/3)))
+  #summary(lm(y ~ I((x.star.1 + x.star.2 + x.star.3 + x.star.4)/4)))
+  #summary(lm(y ~ I((x.star.1 + x.star.2 + x.star.3 + x.star.4 + x.star.5)/5)))
+  #summary(lm(y ~ I((x.star.1 + x.star.2 + x.star.3 + x.star.4 + x.star.5 + x.star.6)/6)))
+
+  # GMM
+  ret.mat[iter, 1] <- coef(felm(y ~ 1 | 0 | (x.star.1 ~ x.star.2)))[2]
+  ret.mat[iter, 2] <- coef(felm(y ~ 1 | 0 | (x.star.1 ~ x.star.2 + x.star.3 + x.star.4 + x.star.5 + x.star.6)))[2]
+  ret.mat[iter, 3] <- coef(felm(y ~ 1 | 0 | (x.star.1 ~ I((x.star.2 + x.star.3 + x.star.4 + x.star.5 + x.star.6)/5))))[2]
+}
+
+
+hist(ret.mat[, 1], breaks = 50)
+hist(ret.mat[, 2], breaks = 50)
+hist(ret.mat[, 3], breaks = 50)
+
+apply(ret.mat, 2, FUN = sd)
+apply(ret.mat, 2, FUN = summary)
+
+ks.test(ret.mat[, 2], ret.mat[, 3])
+ks.test(ret.mat[, 1], ret.mat[, 3])
+ks.test(ret.mat[, 1], ret.mat[, 2])
+
+
+0.029
+0.022
 
 # The formula specification is a response variable followed by a four part formula. The first part consists of ordinary covariates, the second part consists of factors to be projected out. The third part is an IV-specification. The fourth part is a cluster specification for the standard errors. I.e. something like y ~ x1 + x2 | f1 + f2 | (Q|W ~ x3+x4) | clu1 + clu2 where y is the response, x1,x2 are ordinary covariates, f1,f2 are factors to be projected out, Q and W are covariates which are instrumented by x3 and x4, and clu1,clu2 are factors to be used for computing cluster robust standard errors. Parts that are not used should be specified as 0, except if it's at the end of the formula, where they can be omitted.
 
