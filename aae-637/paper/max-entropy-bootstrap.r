@@ -139,7 +139,7 @@ code.dir <- "/home/k/kzaman/TravisImInYourInternets/git/coursework/aae-637/paper
 library(lattice)
 library(Matrix)
 
-  for ( i in c("gdata", "stringr", "systemfit") ) {
+  for ( i in c("plyr", "gdata", "stringr", "systemfit") ) {
     if(!require(i, character.only=TRUE, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")) {
       install.packages(i, repos="http://cran.us.r-project.org", 
         lib="/home/k/kzaman/TravisImInYourInternets/Rlib")
