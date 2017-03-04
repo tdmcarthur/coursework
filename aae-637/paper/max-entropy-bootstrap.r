@@ -28,7 +28,7 @@ functional.form <- "SGM" # OR TRANSLOG
 
 
 #synthetic.data <-TRUE
- synthetic.data <-FALSE
+ synthetic.data <- FALSE
 if (!exists("global.max.seed")) { global.max.seed <- 0}
 do.SUR <- FALSE
 include.cost.fn <- FALSE
@@ -44,7 +44,7 @@ concave.in.prices <- TRUE
 
 if (!synthetic.data) { 
   intended.seed <- 100 
-  start.nonlin.from.ignorance <- TRUE
+  start.nonlin.from.ignorance <- FALSE
 #  start.nonlin.from.ignorance <- TRUE
   global.max.seed <- 4
   do.SUR <- FALSE
@@ -80,7 +80,7 @@ if (functional.form =="SGM") {
   include.censored.cost <- FALSE
 }
 
-price.trim.quantile <- 0.99
+price.trim.quantile <- 0.95
 demand.var.trim.quantile <- 0.95
 #demand.var.trim.quantile <- 1
 
@@ -90,22 +90,25 @@ dropped.cost.share.eq <- 10
 # anything >6 means that no equation gets dropped
 
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/GAMS work/saved workspace.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/GAMS work/saved workspace.Rdata"
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata"
 # with soil
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata"
 # with soil and rain and elevation
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
 
 saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia project/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
 
 
-GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir2/"
+# GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir2/"
+GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir3/"
 
-GAMS.exe.path <- "/Applications/GAMS/gams24.1_osx_x64_64_sfx/gams"
+# GAMS.exe.path <- "/Applications/GAMS/gams24.1_osx_x64_64_sfx/gams"
+GAMS.exe.path <- "/Applications/GAMS24.7/sysdir/gams"
+
 
 code.dir <- "/Users/travismcarthur/git/coursework/aae-637/paper/"
 
@@ -113,15 +116,15 @@ code.dir <- "/Users/travismcarthur/git/coursework/aae-637/paper/"
 
 if (Sys.info()['sysname']=="Linux") {
 
-saved.workspace.path <- "" # "/home/c/cschmidt/TravisImInYourInternets/bootstrap-output/saved workspace.Rdata" NEED TO FIX # saved workspace only inputsDF with soil.Rdata
+saved.workspace.path <- "/home/k/kzaman/TravisImInYourInternets/input-data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata" # "/home/k/kzaman/TravisImInYourInternets/bootstrap-output/saved workspace.Rdata" NEED TO FIX # saved workspace only inputsDF with soil.Rdata
 
-GAMS.projdir <-  "/home/c/cschmidt/TravisImInYourInternets/gamsdir/projdir/"
+GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir/"
 
-GAMS.exe.path <- "/home/c/cschmidt/TravisImInYourInternets/gams24.1_linux_x64_64_sfx/gams"
+GAMS.exe.path <- "/home/k/kzaman/TravisImInYourInternets/gams24.7_linux_x64_64_sfx/gams"
 
-code.dir <- "/home/c/cschmidt/TravisImInYourInternets/bootstrap-R-code/"
+code.dir <- "/home/k/kzaman/TravisImInYourInternets/git/coursework/aae-637/paper/"
 
-.libPaths("/home/c/cschmidt/TravisImInYourInternets/Rlib")
+.libPaths("/home/k/kzaman/TravisImInYourInternets/Rlib")
 
 #detach("package:Matrix", unload = TRUE, force=TRUE)
 #detach("package:lattice", unload = TRUE, force=TRUE)
@@ -129,19 +132,20 @@ code.dir <- "/home/c/cschmidt/TravisImInYourInternets/bootstrap-R-code/"
 #unloadNamespace("lattice")
 
 #install.packages("lattice", repos="http://cran.us.r-project.org", 
-#        lib="/home/c/cschmidt/TravisImInYourInternets/Rlib")
+#        lib="/home/k/kzaman/TravisImInYourInternets/Rlib")
 
-library(lattice, lib.loc ="/home/c/cschmidt/TravisImInYourInternets/Rlib")
-
+# library(lattice, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")
+# The above line was there to get around the old version of R that was installed previously
+library(lattice)
 library(Matrix)
 
   for ( i in c("gdata", "stringr", "systemfit") ) {
-    if(!require(i, character.only=TRUE, lib.loc ="/home/c/cschmidt/TravisImInYourInternets/Rlib")) {
+    if(!require(i, character.only=TRUE, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")) {
       install.packages(i, repos="http://cran.us.r-project.org", 
-        lib="/home/c/cschmidt/TravisImInYourInternets/Rlib")
-      while(!require(i, character.only=TRUE, lib.loc ="/home/c/cschmidt/TravisImInYourInternets/Rlib")) {
+        lib="/home/k/kzaman/TravisImInYourInternets/Rlib")
+      while(!require(i, character.only=TRUE, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")) {
         Sys.sleep(1)
-  	    require(i, character.only=TRUE, lib.loc ="/home/c/cschmidt/TravisImInYourInternets/Rlib")
+  	    require(i, character.only=TRUE, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")
   	  }
     }
   }
@@ -353,6 +357,7 @@ run.linear.from.shell <-paste0("cd ", GAMS.projdir, "\n",
 if (!start.nonlin.from.ignorance) {
   system(run.linear.from.shell)
 }
+stop("END!")
 
 
 # elapsed 0:08:19.548

@@ -5,8 +5,8 @@ library("lfe")
 # Monte Carlo
 
 set.seed(1000)
-n.obs <- 5000
-m.iterations <- 1000
+n.obs <- 1000
+m.iterations <- 10000
 
 ret.mat <- matrix(NA, ncol = 3, nrow = m.iterations)
 
@@ -49,6 +49,19 @@ apply(ret.mat, 2, FUN = summary)
 ks.test(ret.mat[, 2], ret.mat[, 3])
 ks.test(ret.mat[, 1], ret.mat[, 3])
 ks.test(ret.mat[, 1], ret.mat[, 2])
+
+t.test(ret.mat[, 1] - 1 )
+t.test(ret.mat[, 2] - 1 )
+t.test(ret.mat[, 3] - 1 )
+t.test(ret.mat[, 2], ret.mat[, 3])
+
+var.test(ret.mat[, 2], ret.mat[, 3])
+# var.test() assumes normality, which -- since this is an OLS variant -- should hold in this case.
+mood.test(ret.mat[, 2], ret.mat[, 3])
+# mood.test() does not assume normality
+
+# Mood's test has higher power than the Ansari test:
+# https://www.researchgate.net/profile/Boris_Lemeshko/publication/236170343_ABOUT_ROBUSTNESS_AND_POWER_OF_VARIANCE_HOMOGENEITY_TESTS/links/02e7e516cb9c8d3d78000000.pdf
 
 
 0.029
