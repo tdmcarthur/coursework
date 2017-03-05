@@ -5,7 +5,7 @@
 
 
 
-target.top.crop.number <- 1
+target.top.crop.number <- 4
 
 #Including zero cost:
 #Potatoes	4,058
@@ -15,9 +15,9 @@ target.top.crop.number <- 1
 #Fava Beans	1,484
 
 M <- 1
-N <- 6
+N <- 3
 # J <- 3
-J <- 6
+J <- 2
 
 
 
@@ -112,6 +112,8 @@ GAMS.exe.path <- "/Applications/GAMS24.7/sysdir/gams"
 
 code.dir <- "/Users/travismcarthur/git/coursework/aae-637/paper/"
 
+
+
 # GAMS.projdir.subdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir/bootstrap/"
 
 if (Sys.info()['sysname']=="Linux") {
@@ -164,7 +166,16 @@ load(saved.workspace.path)
 
 log.plus.one.cost <- FALSE
 
-bootstrap.iter <- 1
+seed.file <- paste0(GAMS.projdir, "bootstrap-seed.txt")
+# This file starts as a completely empty text file. 
+# It can be produced by "touch" in bash
+
+seed <- readLines(seed.file)
+cat("\n1", file = seed.file, append = TRUE)
+
+# bootstrap.iter <- 1
+bootstrap.iter <- sum(as.numeric(seed), na.rm = TRUE)
+# This starts the very first iteration as numeric(0), which actually sums to 0, so we are good
 # NOTE: Bootstrap iter = 0 means actual estimate
 bootstrap.selection.v <- TRUE
 source(paste0(code.dir, "build-model-extract-parcels.r"))
@@ -357,8 +368,8 @@ run.linear.from.shell <-paste0("cd ", GAMS.projdir, "\n",
 if (!start.nonlin.from.ignorance) {
   system(run.linear.from.shell)
 }
-stop("END!")
-
+#stop("END!")
+next
 
 # elapsed 0:08:19.548
 # elapsed 0:08:26.802
