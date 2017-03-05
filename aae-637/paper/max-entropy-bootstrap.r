@@ -247,7 +247,7 @@ time.counter <- c()
 
 # 1:bootstrap.replications
 
-bootstrap.iter <- 0
+# bootstrap.iter <- 0
 
 
 file.flavor <- "mean-impute-no-cost-fn-no-SUR-logit-attempt"
