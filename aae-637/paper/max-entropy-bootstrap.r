@@ -5,7 +5,7 @@
 
 
 
-target.top.crop.number <- 4
+target.top.crop.number <- 1
 
 #Including zero cost:
 #Potatoes	4,058
@@ -15,9 +15,11 @@ target.top.crop.number <- 4
 #Fava Beans	1,484
 
 M <- 1
-N <- 3
+N <- 6
+# Standard N is 6
 # J <- 3
-J <- 2
+J <- 6
+# Standard J is 6
 
 
 
@@ -141,7 +143,7 @@ code.dir <- "/home/k/kzaman/TravisImInYourInternets/git/coursework/aae-637/paper
 library(lattice)
 library(Matrix)
 
-  for ( i in c("plyr", "gdata", "stringr", "systemfit") ) {
+  for ( i in c("plyr", "gdata", "stringr", "systemfit", "arules") ) {
     if(!require(i, character.only=TRUE, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")) {
       install.packages(i, repos="http://cran.us.r-project.org", 
         lib="/home/k/kzaman/TravisImInYourInternets/Rlib")
@@ -159,7 +161,7 @@ library(Matrix)
 
 
 
-load(saved.workspace.path)
+load(saved.workspace.path, verbose = TRUE)
 
 
 
@@ -430,9 +432,13 @@ if ( do.regimes) {
   # prep-for-sgm-GAMS-regimes-construction.r not having been run
   # Maybe want   source(paste0(code.dir, "build-model-extract-parcels.r"))   here
   
-  source(paste0(code.dir, "regimes-cluster-calc.r"))
+  # source(paste0(code.dir, "regimes-cluster-calc.r"))
   
-  source(paste0(code.dir, "GAMS-multinomial-logit-construction.r"))
+  source(paste0(code.dir, "regimes-full-power-set.r"))
+  
+  # source(paste0(code.dir, "GAMS-multinomial-logit-construction.r"))
+  
+  source(paste0(code.dir, "GAMS-multinomial-logit-construction-all-regimes.r"))
   
   
   run.multinom.logit.from.shell <-paste0("cd ", GAMS.projdir, "\n", 

@@ -1,4 +1,6 @@
 
+table(inputs.df$zona.agroproductiva)
+
 
  synthetic.data <-FALSE
 if (!exists("global.max.seed")) { global.max.seed <- 0}
@@ -17,11 +19,14 @@ J <- 6
 
 
 #saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata"
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata"
+
+saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia project/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
+
 # with soil and rain
 
 library("foreign")
-work.dir <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/"
+work.dir <- "/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/"
 geog.df<- read.spss(paste0(work.dir, "bd68/1-UBIGEO PRODUCTOR/1.-ENA08_BOLIVIA_UBIGEO_CONDICION_JURIDICA_SUPERFICIE_UPA(preg_1-17).sav"), to.data.frame=TRUE)
 colnames(geog.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(geog.df, "variable.labels")) ) )
 
@@ -56,6 +61,9 @@ bootstrap.selection.v <- TRUE
 source(paste0(code.dir, "build-model-extract-parcels.r"))
 
 # Maybe just get each crop in a loop and then restack in a DF
+
+
+t(t(table(region)))
 
 
 #plot(cars, main = "lowess(cars)")
