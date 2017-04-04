@@ -73,6 +73,7 @@ paste0("  t number of observations  / 1 * ", nrow(combined.df), " /"),
 paste0("  d number of variables in datafile  / 1 * ", ncol(combined.df), " /"),
 paste0("  s dimension of S matrix / 1 * ", N-1, "/"),
 paste0("  ss second dimension of S matrix / 1 * ", N-1, "/"),
+paste0("  h dimension of the GME support space / 1 * 3/"),
 "",
 #"alias (s, ss);",
 "",
@@ -93,11 +94,15 @@ data.declaration.lines <-  c( paste0(colnames(combined.df), "(t)"))
 # Eliminated theta here
 
 
+alphae.declaration.lines <- c("bounde endogenous error bound",
+                              "alphae(h) param space for errors")
+
 
 
 # TODO: do I need   indic(k)        copy of set k? Seems no.
 
 top.before.data <- c(top.before.data,
+  alphae.declaration.lines,
   data.declaration.lines,
   "table datafile(t,d)"
 )
@@ -112,6 +117,11 @@ for (i in 1:ncol(combined.df) ) {
     paste0(colnames(combined.df)[i], "(t) = datafile(t,\"", i, "\");")
   )
 }
+
+alphae.support.lines <- c("bounde = 0.15;",
+                          "alphae(h) = 0;",
+                          "alphae(\"1\") = - bounde;",
+                          "alphae(\"3\") =   bounde;")
 
 
 greeks.support.simple.lines <- paste0(
@@ -191,7 +201,7 @@ variable.declaration.lines <- c("variables",
 #  "  Smat(s,ss)   S matrix to make cost function concave",
 #  "  SmatT(ss,s)   transpose of S matrix to make cost function concave",
 #  "  errorrelax(t) small value to accomodate the zero error adding up restriction",
-  "  h           MLE objective value",
+  "  obj           objective value",
   "  overflow_protect a trick to protect the exp from overflow",
   "  inner2(t)   a part of MLE function",
   "  inner1(t) b part of MLE function",
@@ -206,7 +216,7 @@ variable.declaration.lines <- c("variables",
 
 
 
-objective.fn.lines <- c("object..           h =e= sum(t, inner1(t)-part2(t) ) ", ";")
+objective.fn.lines <- c("object..           obj =e= sum(t, inner1(t)-part2(t) ) ", ";")
 
 
 
@@ -506,7 +516,7 @@ model.restrictions <- list(cost.fn.alt.expressions.ls, inner.2.eqn, part.2.eqn, 
 
 equation.declarations <- c(
   "equations",
-  "  object             MLE objective function",
+  "  object             objective function",
   paste0("costeqnalt", formatC(1:length(alt.cost.fn.expr.ls), flag = "0", width = max(nchar(nalts))), "(t)"),
   "inner2eqn(t)",
   "part2eqn(t)",
@@ -637,7 +647,7 @@ paste0("costfnexpralt", 1:nalts, ".l(t) = 1.1;"), # To avoid log of zero
 "    solprint = off,     /* solver's solution output printed */",
 "    sysout = off;       /* solver's system output printed */",
 " ",
-"solve mle using nlp maximizing h; ",
+"solve mle using nlp maximizing obj; ",
 "options decimals = 7;"
 )
 # Help from http://support.gams.com/doku.php?id=gams:how_do_i_reduce_the_size_of_my_listing_.lst_file
@@ -649,6 +659,7 @@ completed.GAMS.file <-  c(
   top.before.data, " ", 
   combined.df.GAMS, " ", 
   data.alloc.lines, " ", 
+  alphae.support.lines, " ",
   greeks.support.simple.lines, " ",
 #  param.support.simple.lines, " ", 
 #  vsupport.lines, " ", 

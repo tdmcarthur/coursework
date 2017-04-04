@@ -111,22 +111,22 @@ cond_logit_llf <- function(b0,  data) {
 
 
 
-with(as.data.frame(apply(signif(combined.df, digits=5), 2, FUN=as.character)), 
-  cond_logit_llf(GAMS.nonlinear.results.params.full )
-)
+#with(as.data.frame(apply(signif(combined.df, digits=5), 2, FUN=as.character)), 
+#  cond_logit_llf(GAMS.nonlinear.results.params.full )
+#)
 
 
-with( as.data.frame(apply(signif(combined.df, digits=5), 2, FUN=as.character)), 
-  cond_logit_llf(GAMS.nonlinear.results.params.full )
-)
+#with( as.data.frame(apply(signif(combined.df, digits=5), 2, FUN=as.character)), 
+#  cond_logit_llf(GAMS.nonlinear.results.params.full )
+#)
 
 
 
-cond_logit_llf(GAMS.nonlinear.results.params.full,
-  data= as.data.frame(apply(signif(combined.df, digits=5), 2, FUN=as.character))) 
+#cond_logit_llf(GAMS.nonlinear.results.params.full,
+#  data= as.data.frame(apply(signif(combined.df, digits=5), 2, FUN=as.character))) 
 
 
-cond_logit_llf(GAMS.nonlinear.results.params.full)
+#cond_logit_llf(GAMS.nonlinear.results.params.full)
   
 
 cond_logit_llf(GAMS.nonlinear.results.params.full,

@@ -15,10 +15,10 @@ target.top.crop.number <- 1
 #Fava Beans	1,484
 
 M <- 1
-N <- 6
+N <- 3
 # Standard N is 6
 # J <- 3
-J <- 6
+J <- 3
 # Standard J is 6
 
 
