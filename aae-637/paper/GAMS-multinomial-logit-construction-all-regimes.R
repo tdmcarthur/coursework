@@ -118,7 +118,7 @@ for (i in 1:ncol(combined.df) ) {
   )
 }
 
-alphae.support.lines <- c("bounde = 0.15;",
+alphae.support.lines <- c("bounde = 0.15;", # TODO: Change to tighten this up by a lot
                           "alphae(h) = 0;",
                           "alphae(\"1\") = - bounde;",
                           "alphae(\"3\") =   bounde;")
@@ -194,7 +194,7 @@ for ( i in 1:(nalts-1) )  {
 
 # all.params <- gsub(" ", "", all.params)
 
-  
+
 
 variable.declaration.lines <- c("variables",
   paste0("  ", unlist(alt.params), "   parameters to be estimated"),
@@ -206,7 +206,9 @@ variable.declaration.lines <- c("variables",
   "  inner2(t)   a part of MLE function",
   "  inner1(t) b part of MLE function",
   "  part2(t) c part of MLE function",
-  paste0("  costfnexpralt", 1:nalts, "(t)    intermediate expression"),
+  "  alphaepart(t) the GME alphae part of the objection function",
+  paste0("  costfnexpralt", formatC(1:nalts, flag = "0", width = max(nchar(nalts))), "(t)    intermediate expression"),
+paste0("  costfnexpralphaealt", formatC(1:nalts, flag = "0", width = max(nchar(nalts))), "(h,t)    intermediate expression"),
   ";"
 )
 
@@ -215,8 +217,7 @@ variable.declaration.lines <- c("variables",
 
 
 
-
-objective.fn.lines <- c("object..           obj =e= sum(t, inner1(t)-part2(t) ) ", ";")
+objective.fn.lines <- c("object..           obj =e= sum(t, inner1(t) - part2(t) - alphaepart(t)) ", ";")
 
 
 
@@ -279,7 +280,6 @@ for ( i in 1:(nalts-1) )  {
 }
 
 alt.cost.fn.expr.ls[[length(alt.cost.fn.expr.ls)+1]] <- 0
-
 # 0 since the last option is [all zeros] because of exclusion of last category
 
 
@@ -291,7 +291,8 @@ for ( i in 1:length(alt.cost.fn.expr.ls) )  {
 
   cost.fn.alt.expressions.ls[[i]] <- c( paste0( "costeqnalt", 
                                                 formatC(i, flag = "0", width = max(nchar(nalts))), "(t).."),
-    strwrap( paste0("costfnexpralt", i, "(t) =e= ",
+    strwrap( paste0("costfnexpralt", formatC(i, flag = "0", width = max(nchar(nalts))), 
+                    "(t) =e= ",
        alt.cost.fn.expr.ls[[ i ]]), indent=12, exdent=19, width=80), ";" ) 
 
 }
@@ -303,8 +304,10 @@ for ( i in 1:length(alt.cost.fn.expr.ls) )  {
 
 
 
-overflow.protect.eqn <-   paste0( "overflow_protect_eqn", 1:(length(alt.cost.fn.expr.ls)-1), "(t)..  overflow_protect =g= ", 
-    "costfnexpralt", 1:(length(alt.cost.fn.expr.ls)-1), "(t)", "\n ; \n")
+overflow.protect.eqn <-   paste0( "overflow_protect_eqn", 
+             formatC(1:(length(alt.cost.fn.expr.ls)-1), flag = "0", width = max(nchar(nalts))),
+             "(t)..  overflow_protect =g= ", 
+    "costfnexpralt", formatC(1:(length(alt.cost.fn.expr.ls)-1), flag = "0", width = max(nchar(nalts))), "(t)", "\n ; \n")
 
 # Much thanks to http://jblevins.org/log/log-sum-exp
 
@@ -323,6 +326,60 @@ overflow.protect.eqn <-   paste0( "overflow_protect_eqn", 1:(length(alt.cost.fn.
 
 
 
+alt.cost.fn.expr.alphae.ls <- list()
+
+for ( i in 1:(nalts-1) )  {
+  # reverse the order of the params so that the wrong params do not get replaced
+  targ.order <- rev( order( nchar(all.params) ) )
+  all.params.to.replace <- all.params[ targ.order ]
+  all.alt.params.to.replace <- alt.params[[i]][ targ.order ]
+  alt.cost.fn.expr.alphae.ls[[ i ]] <- cost.fn.expr.w.subscripts
+  for ( j in 1:length( all.params ))  {
+  alt.cost.fn.expr.alphae.ls[[ i ]]  <- gsub(
+      all.params.to.replace[j], 
+      paste0(all.alt.params.to.replace[j], " * alphae(h) "), 
+      alt.cost.fn.expr.alphae.ls[[ i ]], fixed=TRUE
+    )
+    # fixed= TRUE so that the . do not get interpreted as any character
+  alt.cost.fn.expr.alphae.ls[[ i ]] <- gsub("  ", " ", alt.cost.fn.expr.alphae.ls[[ i ]])
+  }
+}
+
+alt.cost.fn.expr.alphae.ls[[length(alt.cost.fn.expr.alphae.ls) + 1]] <- 0
+# 0 since the last option is [all zeros] because of exclusion of last category
+
+
+
+cost.fn.alt.expressions.alphae.ls <- list()
+# Make list above for this
+
+for ( i in 1:length(alt.cost.fn.expr.alphae.ls) )  {
+
+  cost.fn.alt.expressions.alphae.ls[[i]] <- c( paste0( "costeqnalphaealt", 
+                                                formatC(i, flag = "0", width = max(nchar(nalts))), "(h,t).."),
+    strwrap( paste0("costfnexpralphaealt", formatC(i, flag = "0", width = max(nchar(nalts))), 
+                    "(h,t) =e= ",
+       alt.cost.fn.expr.alphae.ls[[ i ]]), indent=12, exdent=19, width=80), ";" ) 
+
+}
+
+
+
+#overflow.protect.eqn <- 
+#  c(paste0( "overflow_protect_eqn..  overflow_protect =e= max(", paste0( "costfnexpralt", 1:(length(alt.cost.fn.expr.ls)-1), "(t)", collapse=", "), ")"), ";")
+
+overflow.protect.eqn <-  c(overflow.protect.eqn,
+                           paste0( "overflow_protect_eqn_alphae", 
+             formatC(1:(length(alt.cost.fn.expr.ls)-1), flag = "0", width = max(nchar(nalts))),
+             "(h,t)..  overflow_protect =g= ", 
+    "costfnexpralphaealt", formatC(1:(length(alt.cost.fn.expr.ls)-1), flag = "0", width = max(nchar(nalts))), "(h,t)", "\n ; \n")
+)
+
+
+
+
+
+
 
 
 
@@ -332,7 +389,9 @@ overflow.protect.eqn <-   paste0( "overflow_protect_eqn", 1:(length(alt.cost.fn.
 
 
 inner.2.eqn <- c("inner2eqn(t)..    inner2(t)     =e= ", 
-  strwrap( paste0("overflow_protect + log(", paste0("exp(costfnexpralt", 1:length(alt.cost.fn.expr.ls), "(t) - overflow_protect)", collapse= " + "), ")"), 
+  strwrap( paste0("overflow_protect + log(", paste0("exp(costfnexpralt", 
+                                formatC(1:length(alt.cost.fn.expr.ls), flag = "0", width = max(nchar(nalts))), 
+                                "(t) - overflow_protect)", collapse= " + "), ")"), 
   indent=12, exdent=19, width=80), ";" )
   # Placing log here instead of as part of part.2 so that the inner2 var does not hit the
   # GAMS "infinity" upper limit
@@ -347,14 +406,32 @@ part.2.eqn <- c("part2eqn(t)..     part2(t)    =e= ",
 
 inner.1.eqn <- c("inner1eqn(t)..    inner1(t)     =e= ", 
   strwrap( paste0("mode", formatC(1:length(alt.cost.fn.expr.ls), flag = "0", width = max(nchar(nalts))),
-                  "(t) * costfnexpralt", 1:length(alt.cost.fn.expr.ls),
+                  "(t) * costfnexpralt", formatC(1:length(alt.cost.fn.expr.ls), flag = "0", width = max(nchar(nalts))),
   "(t)", collapse= " + "), 
   indent=12, exdent=19, width=80), ";" )
+
+
+# inner.1.eqn <- c("sumalphaepart(t)..    alphaepart(t)     =e= ", 
+sum.alphae.part.eqn <- c("sumalphaepart(t)..    alphaepart(t)     =e= ", 
+  strwrap( paste0("overflow_protect + log(", paste0("sum(h, exp(costfnexpralphaealt", 
+                                formatC(1:length(alt.cost.fn.expr.alphae.ls), flag = "0", width = max(nchar(nalts))), 
+                                "(h,t) - overflow_protect))", collapse= " + "), ")"), 
+  indent=12, exdent=19, width=80), ";" )
+
+
+#costfnexpralphaealt
+#costeqnalphaealt
 
 #  * log(  )
 
 
-model.restrictions <- list(cost.fn.alt.expressions.ls, inner.2.eqn, part.2.eqn, inner.1.eqn, overflow.protect.eqn)
+model.restrictions <- list(cost.fn.alt.expressions.ls, 
+                           cost.fn.alt.expressions.alphae.ls,
+                           sum.alphae.part.eqn,
+                           inner.2.eqn, 
+                           part.2.eqn, 
+                           inner.1.eqn, 
+                           overflow.protect.eqn)
 
 
 
@@ -518,11 +595,14 @@ equation.declarations <- c(
   "equations",
   "  object             objective function",
   paste0("costeqnalt", formatC(1:length(alt.cost.fn.expr.ls), flag = "0", width = max(nchar(nalts))), "(t)"),
+  paste0("costeqnalphaealt", formatC(1:length(alt.cost.fn.expr.ls), flag = "0", width = max(nchar(nalts))), "(h,t)"),
   "inner2eqn(t)",
   "part2eqn(t)",
   "inner1eqn(t)",
-  paste0("overflow_protect_eqn", 1:(length(alt.cost.fn.expr.ls)-1) ),
-#  gsub("[.]{2}.*$", "", prob.weight.param.lines),
+  "sumalphaepart(t)",
+  paste0("overflow_protect_eqn", formatC(1:(length(alt.cost.fn.expr.ls)-1), flag = "0", width = max(nchar(nalts))) ),
+  paste0("overflow_protect_eqn_alphae", formatC(1:(length(alt.cost.fn.expr.ls)-1), flag = "0", width = max(nchar(nalts))) ),
+#  gsub("[.]{2}.*$", "", prob.weight.param.lines), 
 #  gsub("[.]{2}.*$", "",  prob.weight.error.lines),
 #  "restrcosta(t)",
 #  "restrcostb(t)",
@@ -606,7 +686,7 @@ final.lines <-
 c(
 "*Initial conditions",
 "inner2.l(t) = 1.1;", # To avoid log of zero
-paste0("costfnexpralt", 1:nalts, ".l(t) = 1.1;"), # To avoid log of zero
+paste0("costfnexpralt", formatC(1:nalts, flag = "0", width = max(nchar(nalts))), ".l(t) = 1.1;"), # To avoid log of zero
 
 
 #paste0("  p", all.params, ".l(m) = 1/MM;"),

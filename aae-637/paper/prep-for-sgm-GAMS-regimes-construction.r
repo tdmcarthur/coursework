@@ -126,7 +126,7 @@ for ( i in 1:nalts) {
 
   assign( paste0("P", lead.zero(i)), temp.outcome.pred)
   
-  assign( paste0("RInd", lead.zero(i)), get(paste0("mode", i) )) 
+  assign( paste0("RInd", lead.zero(i)), get(paste0("mode", formatC(i, flag = "0", width = max(nchar(nalts)))) )) 
     
 }
 

@@ -5,7 +5,7 @@
 
 
 
-target.top.crop.number <- 1
+target.top.crop.number <- 2
 
 #Including zero cost:
 #Potatoes	4,058
@@ -15,10 +15,10 @@ target.top.crop.number <- 1
 #Fava Beans	1,484
 
 M <- 1
-N <- 3
+N <- 6
 # Standard N is 6
 # J <- 3
-J <- 3
+J <- 6
 # Standard J is 6
 
 
@@ -371,7 +371,7 @@ if (!start.nonlin.from.ignorance) {
   system(run.linear.from.shell)
 }
 #stop("END!")
-next
+# next
 
 # elapsed 0:08:19.548
 # elapsed 0:08:26.802
@@ -456,7 +456,9 @@ if ( do.regimes) {
   
   source(paste0(code.dir, "prep-for-sgm-GAMS-regimes-construction.r"))
   
-  start.nonlin.regimes.from.ignorance <- FALSE
+   start.nonlin.regimes.from.ignorance <- FALSE
+  #start.nonlin.regimes.from.ignorance <- TRUE
+  # global.max.seed <- 0
   
   source(paste0(code.dir, "sgm-GAMS-regimes-construction.r"))
   
