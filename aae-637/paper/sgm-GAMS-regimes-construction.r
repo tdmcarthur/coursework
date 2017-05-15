@@ -451,7 +451,11 @@ model.restrictions <- list()
 
 # add.data.subscripts
 
-GAMS.demand.eqns.nonlinear <- lapply(demand.eqns.alt, FUN=add.data.subscripts)
+if (het.tech) {
+  GAMS.demand.eqns.nonlinear <- lapply(demand.eqns.alt, FUN=add.data.subscripts)
+} else {
+  GAMS.demand.eqns.nonlinear <- lapply(demand.eqns.nonlinear, FUN=add.data.subscripts)
+}
 
 GAMS.demand.eqns.nonlinear <- lapply(GAMS.demand.eqns.nonlinear, FUN=function(x) gsub(pattern="[.]", replacement="", x=x))
 GAMS.demand.eqns.nonlinear <- lapply(GAMS.demand.eqns.nonlinear, FUN=function(x) gsub(pattern="[{^]", replacement="**", x=x))
@@ -1292,11 +1296,13 @@ for ( i in 1:length(GAMS.nonlinear.results.params.names)) {
 
 
 
+# FLAG: This is part of code that sets this as het technology
 
+if (het.tech) {
+  GAMS.nonlinear.results.params.names <- paste0(GAMS.nonlinear.results.params.names, 
+    rep(paste0("R", lead.zero(1:nalts)), each=length(GAMS.nonlinear.results.params.names) ) )
+}
 
-GAMS.nonlinear.results.params.names <- paste0(GAMS.nonlinear.results.params.names, 
-  rep(paste0("R", lead.zero(1:nalts)), each=length(GAMS.nonlinear.results.params.names) ) )
-  
 #GAMS.nonlinear.results.params.names <- c(
 #  GAMS.nonlinear.results.params.names[!grepl("(surdelta)|(xi)", GAMS.nonlinear.results.params.names)],
 #  unique(gsub("R.*", "", GAMS.nonlinear.results.params.names[grepl("(surdelta)|(xi)", GAMS.nonlinear.results.params.names)] ) )
@@ -1306,7 +1312,7 @@ GAMS.nonlinear.results.params.names <- paste0(GAMS.nonlinear.results.params.name
 # it works
 
 param.starting.vals <- paste0(GAMS.nonlinear.results.params.names, ".l = ", GAMS.nonlinear.results.params.numbers, ";")
-# CAUTION: we are using vector recycling here
+# CAUTION: we are using vector recycling here if het.tech == TRUE
 
 ind.to.delete <- grep("(surdelta[0-9][0-9]R[0-9][0-9])|(xi[0-9][0-9]R[0-9][0-9])", param.starting.vals)
 

@@ -1588,12 +1588,12 @@ completed.GAMS.file <-  c(
 )
 
 
-  
+if (non.linear.GAMS.output) {
 cat(completed.GAMS.file, 
   file=paste0(GAMS.projdir, "sgmGMEnonlinear", strsplit(target.crop, " ")[[1]][1], 
    formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor , ".gms"), 
   sep="\n")
-  
+}
 # rvhess = maxdouble
 
 

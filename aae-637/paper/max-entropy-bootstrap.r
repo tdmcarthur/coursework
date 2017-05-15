@@ -2,6 +2,7 @@
 # 
 
 ## source("/Users/travismcarthur/git/coursework/aae-637/paper/initial-data-setup.r")
+## source("/Users/travismcarthur/git/coursework/aae-637/paper/max-entropy-bootstrap.r")
 
 
 
@@ -331,6 +332,7 @@ if (functional.form =="SGM") {
 
 
 linear.GAMS.output <- TRUE
+non.linear.GAMS.output <- TRUE
 # linear.GAMS.output <- FALSE
 
 
@@ -457,12 +459,26 @@ if ( do.regimes) {
   set.exp.correction.as.q07 <- TRUE
   normalize.cond.exp.coefs <- TRUE
   
-  
+  # NOTE: A major thing that occurs with this file below is we get
+  # J <- J + 1
+  # which is used in every other operation below
+  linear.GAMS.output <- FALSE
   source(paste0(code.dir, "prep-for-sgm-GAMS-regimes-construction.r"))
+  
+  
+  
+  # This below is to re-construct the nonlinear equations with the last q0[0-9] ready to be replaced
+  # by the conditional expectation correction
+  non.linear.GAMS.output <- FALSE
+  source(paste0(code.dir, "sgm-linear-sur-building.r"), local = local.source.evaluation) 
+  source(paste0(code.dir, "sgm-GAMS-linear-construction.r"))
+  source(paste0(code.dir, "sgm-GAMS-nonlinear-construction.r"))
   
    start.nonlin.regimes.from.ignorance <- FALSE
   #start.nonlin.regimes.from.ignorance <- TRUE
   # global.max.seed <- 0
+   het.tech <- FALSE
+   
   
   source(paste0(code.dir, "sgm-GAMS-regimes-construction.r"))
   
