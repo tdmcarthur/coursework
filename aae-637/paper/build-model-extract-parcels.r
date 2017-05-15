@@ -216,13 +216,13 @@ nls.formula.ln.E.region <- ln.E
 
 if (functional.form =="SGM") {
 
-  source(paste0(code.dir, "sgm-linear-sur-building.r"), local=local.source.evaluation)  
-  source(paste0(code.dir, "sur-var-building.r"), local=local.source.evaluation)  
+  source(paste0(code.dir, "sgm-linear-sur-building.r"), local = local.source.evaluation)  
+  source(paste0(code.dir, "sur-var-building.r"), local = local.source.evaluation)  
   if (synthetic.data) {
-    source(paste0(code.dir, "synthetic-data.r"), local=local.source.evaluation)
+    source(paste0(code.dir, "synthetic-data.r"), local = local.source.evaluation)
   }
-  if (TRUE) {
-    source(paste0(code.dir, "sgm-tobit.r"), local=local.source.evaluation)
+  if (do.tobit) {
+    source(paste0(code.dir, "sgm-tobit.r"), local = local.source.evaluation)
   }
 
 }

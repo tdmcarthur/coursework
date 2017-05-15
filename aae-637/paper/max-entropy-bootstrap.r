@@ -29,6 +29,9 @@ do.regimes <- TRUE
 functional.form <- "SGM" # OR TRANSLOG
 #functional.form <- "TRANSLOG"
 
+do.tobit <- TRUE
+# Necessary
+
 
 #synthetic.data <-TRUE
  synthetic.data <- FALSE
