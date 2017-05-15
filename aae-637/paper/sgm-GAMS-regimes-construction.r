@@ -1,6 +1,10 @@
 
 
-
+if (het.tech) {
+  tech.nalts <- nalts
+} else {
+  tech.nalts <- 1
+}
 
 
 
@@ -111,8 +115,8 @@ top.before.data <- c(
 "sets ",
 paste0("  t number of observations  / 1 * ", nrow(combined.df), " /"),
 paste0("  d number of variables in datafile  / 1 * ", ncol(combined.df), " /"),
-paste0("  ssR", lead.zero(1:nalts), " dimension of S matrix / 1 * ", N-1, "/"),
-paste0("  sssR", lead.zero(1:nalts), " second dimension of S matrix / 1 * ", N-1, "/"),
+paste0("  ssR", lead.zero(1:tech.nalts), " dimension of S matrix / 1 * ", N-1, "/"),
+paste0("  sssR", lead.zero(1:tech.nalts), " second dimension of S matrix / 1 * ", N-1, "/"),
 paste0("  cc dimension of C matrix / 1 * ", J, "/"),
 paste0("  ccc second dimension of C matrix / 1 * ", J, "/"),
 paste0("  m number of points in interval z / 1 * ", length(other.param.support), "/"),
@@ -257,11 +261,17 @@ for ( i in 1:length(demand.eqns))  {
 
 
 # all.params <- gsub("[.]", "", names(ln.E.start.vals)[!grepl("region", names(ln.E.start.vals))] )
-
-all.params <- unique(unlist(str_extract_all(unlist(demand.eqns.alt), 
-"(lambda[0-9][0-9])|(xi.[0-9][0-9])|(s.[0-9][0-9].[0-9][0-9]R[0-9][0-9])|(b.y.[0-9][0-9]R[0-9][0-9])|(b.[0-9][0-9]R[0-9][0-9])|(b.y.yR[0-9][0-9])|(d.[0-9][0-9].[0-9][0-9]R[0-9][0-9])|(c.[0-9][0-9]R[0-9][0-9] )|(c.[0-9][0-9].[0-9][0-9]R[0-9][0-9])"
-  ))
-)
+if (het.tech) {
+  all.params <- unique(unlist(str_extract_all(unlist(demand.eqns.alt), 
+  "(lambda[0-9][0-9])|(xi.[0-9][0-9])|(s.[0-9][0-9].[0-9][0-9]R[0-9][0-9])|(b.y.[0-9][0-9]R[0-9][0-9])|(b.[0-9][0-9]R[0-9][0-9])|(b.y.yR[0-9][0-9])|(d.[0-9][0-9].[0-9][0-9]R[0-9][0-9])|(c.[0-9][0-9]R[0-9][0-9] )|(c.[0-9][0-9].[0-9][0-9]R[0-9][0-9])"
+    ))
+  )
+} else {
+  all.params <- unique(unlist(str_extract_all(unlist(demand.eqns.nonlinear), 
+  "(xi.[0-9][0-9])|(s.[0-9][0-9].[0-9][0-9])|(b.y.[0-9][0-9])|(b.[0-9][0-9])|(b.y.y)|(d.[0-9][0-9].[0-9][0-9])|(c.[0-9][0-9] )|(c.[0-9][0-9].[0-9][0-9])"
+    ))
+  )
+}
 
 # NOTE: DOuble-check about the dots on demand.eqns.alt here 
 
@@ -363,8 +373,8 @@ if (!do.SUR) { cov.var.declarations <- c() }
 variable.declaration.lines <- c("variables",
   paste0("  ", all.params, "   parameters to be estimated"),
   ifelse(set.exp.correction.as.q07, paste0("  q", lead.zero(J), "(t)    expectation correction term"), ""),
-  paste0("SmatR", lead.zero(1:nalts), "(ssR", lead.zero(1:nalts), ",", "sssR", lead.zero(1:nalts), ") S matrix to make cost function concave" ),
-  paste0("SmatTR", lead.zero(1:nalts), "(sssR", lead.zero(1:nalts), ",", "ssR", lead.zero(1:nalts), ") S matrix to make cost function concave" ),
+  paste0("SmatR", lead.zero(1:tech.nalts), "(ssR", lead.zero(1:tech.nalts), ",", "sssR", lead.zero(1:tech.nalts), ") S matrix to make cost function concave" ),
+  paste0("SmatTR", lead.zero(1:tech.nalts), "(sssR", lead.zero(1:tech.nalts), ",", "ssR", lead.zero(1:tech.nalts), ") S matrix to make cost function concave" ),
 ifelse(convex.in.f.inputs,  "  Cmat(cc,ccc)   C matrix to make cost function convex in fixed inputs", ""),
 ifelse(convex.in.f.inputs,  "  CmatT(ccc,cc)   transpose of C matrix to make cost function convex in fixed inputs", ""),
 #  "  errorrelax(t) small value to accomodate the zero error adding up restriction",
@@ -671,9 +681,12 @@ cov.rest.declarations  <- cov.rest.declarations[cov.rest.declarations != ""]
 
 if (!do.SUR) { cov.rest.declarations <- c() }
 
-
-double.s.params<- unique(unlist(str_extract_all(gsub("[.]", "", unlist(demand.eqns.alt)), "s[0-9]{4}R[0-9]{2}")))
-
+if (het.tech) {
+  double.s.params <- unique(unlist(str_extract_all(gsub("[.]", "", unlist(demand.eqns.alt)), "s[0-9]{4}R[0-9]{2}")))
+} else {
+  double.s.params <- unique(unlist(str_extract_all(gsub("[.]", "", unlist(demand.eqns.nonlinear)), "s[0-9]{4}")))
+}
+  
 double.s.indices <- str_extract_all(double.s.params, "[0-9]{2}")
 
 concave.restriction.defn <- c()
@@ -682,8 +695,12 @@ for ( i in 1:length(double.s.indices)) {
 
  first.ind <- as.numeric(double.s.indices[[i]][1])
  second.ind <- as.numeric(double.s.indices[[i]][2])
- third.ind <- as.numeric(double.s.indices[[i]][3])
+ if (het.tech) {
+   third.ind <- as.numeric(double.s.indices[[i]][3])
  # Third index is the regime
+ } else {
+   third.ind <- "01"
+ }
 
   concave.restriction.defn <- c(concave.restriction.defn,  paste0( "restrconcave", double.s.params[i], "..      ", double.s.params[i], " =e= - sum(sssR", lead.zero(third.ind), ", SmatR", lead.zero(third.ind), "(\"", 
   first.ind - 1, "\",sssR", lead.zero(third.ind), ")*SmatTR", lead.zero(third.ind), "(sssR", 
@@ -727,11 +744,11 @@ concave.restriction.declare <- gsub("[.].*", "", concave.restriction.defn)
 
 
 Smat.transpose.restriction.defn <- paste0(
-  "restrSmattransR", lead.zero(1:nalts), "(ssR", lead.zero(1:nalts), ",sssR", lead.zero(1:nalts), 
-  ").. SmatR", lead.zero(1:nalts), "(ssR", lead.zero(1:nalts), ",sssR", lead.zero(1:nalts),
-  ") =e= SmatTR", lead.zero(1:nalts), "(sssR", lead.zero(1:nalts), ",ssR", lead.zero(1:nalts), ");" )
+  "restrSmattransR", lead.zero(1:tech.nalts), "(ssR", lead.zero(1:tech.nalts), ",sssR", lead.zero(1:tech.nalts), 
+  ").. SmatR", lead.zero(1:tech.nalts), "(ssR", lead.zero(1:tech.nalts), ",sssR", lead.zero(1:tech.nalts),
+  ") =e= SmatTR", lead.zero(1:tech.nalts), "(sssR", lead.zero(1:tech.nalts), ",ssR", lead.zero(1:tech.nalts), ");" )
 
-Smat.transpose.restriction.declare <- paste0( "restrSmattransR", lead.zero(1:nalts))
+Smat.transpose.restriction.declare <- paste0( "restrSmattransR", lead.zero(1:tech.nalts))
 
 
 
@@ -870,13 +887,17 @@ GAMS.nonlinear.results <- gsub(param.gather.regex, "", GAMS.nonlinear.results)
 GAMS.nonlinear.results.extracted <- str_extract(GAMS.nonlinear.results, " p.*[.]L")
 
 prob.names <- GAMS.nonlinear.results.extracted[!is.na(GAMS.nonlinear.results.extracted)]
-
-prob.names <- paste0(gsub("[.]L", "", prob.names), "R", rep(lead.zero(1:nalts), each=length(prob.names)), ".L")  
+if (het.tech) {
+  prob.names <- paste0(gsub("[.]L", "", prob.names), "R", rep(lead.zero(1:nalts), each=length(prob.names)), ".L")  
+} else {
+  #prob.names <- paste0(gsub("[.]L", "", prob.names), ".L")  
+  # Nothing should be done, actually
+}
 
 prob.numbers <- GAMS.nonlinear.results[which(!is.na(GAMS.nonlinear.results.extracted)) + 2]
-
-prob.numbers <- rep(prob.numbers, nalts)
-
+if (het.tech) {
+  prob.numbers <- rep(prob.numbers, nalts)
+}
 
 
 # NEW WAY TO GET PARAM VALUES BELOW
@@ -910,13 +931,14 @@ for ( targ.prob.name in unique(prob.names) ) {
 }
 # Being a bit clever here to ensure that we pass the later steps 
 # exactly what they were expecting, based on the previous way of extracting this
+if (het.tech) {
+  prob.numbers <- rep(prob.numbers, nalts)
+  # Wow, this relies heavily on having the right order, etc.
 
-prob.numbers <- rep(prob.numbers, nalts)
-# Wow, this relies heavily on having the right order, etc.
-
-
-prob.names <- paste0( prob.names, "R", rep(lead.zero(1:nalts), each=length(prob.names)), ".L")  
-
+  prob.names <- paste0( prob.names, "R", rep(lead.zero(1:nalts), each=length(prob.names)), ".L")  
+} else {
+  prob.names <- paste0(prob.names, ".L")  
+}
 # prob.numbers <- GAMS.nonlinear.results[which(!is.na(GAMS.nonlinear.results.extracted)) + 2]
 
 
@@ -1147,7 +1169,7 @@ if ( any(grepl("(Cmat)|(TIME)", gsub(" ", "", Smat.initiation.v)))) { Smat.initi
 
 Smat.initiation.grid <- expand.grid(1:(N-1), 1:(N-1))
 
-Smat.initial.values <- paste0("SmatR", rep(lead.zero(1:nalts), each=length(Smat.initiation.v)), ".L(\"", Smat.initiation.grid[, 1], "\",\"", Smat.initiation.grid[, 2], "\") =  ", Smat.initiation.v, ";")
+Smat.initial.values <- paste0("SmatR", rep(lead.zero(1:tech.nalts), each=length(Smat.initiation.v)), ".L(\"", Smat.initiation.grid[, 1], "\",\"", Smat.initiation.grid[, 2], "\") =  ", Smat.initiation.v, ";")
 
 
 
@@ -1297,7 +1319,6 @@ for ( i in 1:length(GAMS.nonlinear.results.params.names)) {
 
 
 # FLAG: This is part of code that sets this as het technology
-
 if (het.tech) {
   GAMS.nonlinear.results.params.names <- paste0(GAMS.nonlinear.results.params.names, 
     rep(paste0("R", lead.zero(1:nalts)), each=length(GAMS.nonlinear.results.params.names) ) )
@@ -1518,8 +1539,14 @@ for ( i in 1:length(all.eqns) ) {
 
   assign(paste0("xi", lead.zero(N)), 1)
 
-  rhs.to.set.error.term    <- with(as.list(chosen.global.search.params) ,
-      eval(parse(text=gsub("[.]", "", demand.eqns.alt[[i]])))) 
+  if (het.tech) {
+    rhs.to.set.error.term    <- with(as.list(chosen.global.search.params) ,
+        eval(parse(text=gsub("[.]", "", demand.eqns.alt[[i]])))) 
+  } else {
+      rhs.to.set.error.term    <- with(as.list(chosen.global.search.params) ,
+        eval(parse(text=gsub("[.]", "", demand.eqns.nonlinear[[i]])))) 
+      
+  }
       
   err.term.maxed.ent.ls <- vector("list", length(rhs.to.set.error.term))
   
@@ -1736,7 +1763,7 @@ parameter.display.lines <- c( paste0("display ", all.params, ".l;"),
   paste0("display p", all.params, ".l;"),
   paste0("display w", all.eqns, ".l;"),
   cov.var.display,
-  paste0("display SmatR", lead.zero(1:nalts), ".l"),
+  paste0("display SmatR", lead.zero(1:tech.nalts), ".l"),
 ifelse(convex.in.f.inputs,  paste0("display Cmat.l"), "")
 #  paste0("display errorrelax.l")
   )

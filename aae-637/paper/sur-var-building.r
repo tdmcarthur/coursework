@@ -160,6 +160,8 @@ q03 <- c(unname(firm.df$soil.quality))
 q04 <- c(unname(firm.df$elevation))
 q05 <- c(unname(firm.df$mean.ann.rain.5yr)) / 100 # Rescaling rainfall 
 # Stripping out some unwanted attributes
+q06 <- rep(0, times = length(q05))
+# This q06 is just to "fool" sgm-GAMS-linear-construction when we want to do a conditional expectation correction
 
 
 if (log.plus.one.cost) {

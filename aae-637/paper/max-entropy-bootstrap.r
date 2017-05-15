@@ -431,6 +431,8 @@ do.regimes <- TRUE
 
 
 if ( do.regimes) {
+  
+  print("The value of J is", J, "\n")
 
   n.regime.groups <- 6
   
@@ -459,13 +461,14 @@ if ( do.regimes) {
   set.exp.correction.as.q07 <- TRUE
   normalize.cond.exp.coefs <- TRUE
   
+  print("The value of J is", J, "\n")
   # NOTE: A major thing that occurs with this file below is we get
   # J <- J + 1
   # which is used in every other operation below
   linear.GAMS.output <- FALSE
   source(paste0(code.dir, "prep-for-sgm-GAMS-regimes-construction.r"))
   
-  
+  print("The value of J is", J, "\n")
   
   # This below is to re-construct the nonlinear equations with the last q0[0-9] ready to be replaced
   # by the conditional expectation correction
@@ -479,6 +482,7 @@ if ( do.regimes) {
   # global.max.seed <- 0
    het.tech <- FALSE
    
+   print("The value of J is", J, "\n")
   
   source(paste0(code.dir, "sgm-GAMS-regimes-construction.r"))
   
