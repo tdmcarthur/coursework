@@ -991,18 +991,26 @@ dropped.cost.share.eq <- 10
 # anything >6 means that no equation gets dropped
 
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/GAMS work/saved workspace.Rdata"
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/GAMS work/saved workspace.Rdata"
+
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata"
 # with soil
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata"
 # with soil and rain and elevation
 
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
 
-GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir2/"
+saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia project/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
 
-GAMS.exe.path <- "/Applications/GAMS/gams24.1_osx_x64_64_sfx/gams"
+
+# GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir2/"
+GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir3/"
+
+# GAMS.exe.path <- "/Applications/GAMS/gams24.1_osx_x64_64_sfx/gams"
+GAMS.exe.path <- "/Applications/GAMS24.7/sysdir/gams"
+
 
 code.dir <- "/Users/travismcarthur/git/coursework/aae-637/paper/"
 

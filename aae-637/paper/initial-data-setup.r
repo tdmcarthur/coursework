@@ -1,6 +1,6 @@
 library("foreign")
 
-work.dir <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/"
+work.dir <- "/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/"
 
 inputs.df<- read.spss(paste0(work.dir, "bd68/2-AGRICOLA/Cultivos (Preg-19)/2.-ENA08_BOLIVIA_CULTIVOS_PRODUCCION_INSUMOS(preg_19).sav"), to.data.frame=TRUE)
 
@@ -426,7 +426,7 @@ mano.obra.df$hourly.tractor.rental <- mano.obra.df$x101.cual.el.costo.de.la.hra.
 
 
 
-input.price.columns <- c("hourly.wage", "hourly.tractor.rental")
+input.price.columns <- c("hourly.wage", "hourly.tractor.rental", "paid.hours")
 
 nation.input.averages <- apply(mano.obra.df[, input.price.columns], 2, FUN=function(x) impute.mean.or.median(x[x>0], na.rm=TRUE) )
 nation.input.nobs <- apply(mano.obra.df[, input.price.columns], 2, FUN=function(x) { x <- x[!is.na(x)]; length(x[x>0])} )
@@ -520,9 +520,18 @@ colnames(family.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(family.df, 
 family.df$ag.fam.labor.equiv <- (family.df$x97.en.=="Agricultura") + (family.df$x97.en.=="Ambas") * .5
 family.df$ag.fam.labor.equiv[is.na(family.df$ag.fam.labor.equiv)] <- 0
 
+# Just the same as what is performed by this line in sur.var.build.r:
+# q03 = firm.df$ag.fam.labor.equiv.spread
+# q03[q03 == 0] = .5
+
 labor.aggregate <- aggregate(ag.fam.labor.equiv ~ folio, data=family.df, FUN=sum)
 
+labor.aggregate$ag.fam.labor.equiv[labor.aggregate$ag.fam.labor.equiv == 0] <- 0.5
+
 mano.obra.df <- merge( mano.obra.df, labor.aggregate, all=TRUE)
+
+mano.obra.df$ag.fam.labor.equiv.hrs <- mano.obra.df$paid.hours * mano.obra.df$ag.fam.labor.equiv
+
 
 
 
@@ -562,6 +571,8 @@ inputs.df <- merge(inputs.df, area.agg )
 inputs.df$plot.prop.of.firm.area <- inputs.df$x19.superficie.cultivada.hectareas /inputs.df$firm.level.area
 
 inputs.df$ag.fam.labor.equiv.spread <- inputs.df$ag.fam.labor.equiv * inputs.df$plot.prop.of.firm.area
+
+inputs.df$ag.fam.labor.equiv.hrs.spread <- inputs.df$ag.fam.labor.equiv.hrs * inputs.df$plot.prop.of.firm.area
 
 inputs.df$x107.hrs.tractor.spread <- inputs.df$x107.hrs.tractor * inputs.df$plot.prop.of.firm.area
 
@@ -921,7 +932,7 @@ library("rgdal")
 # install.packages("splancs", repos="http://cran.us.r-project.org")
 library("splancs")
 
-work.dir <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/"
+work.dir <- "/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/"
 
 
 
@@ -944,6 +955,10 @@ village.geog.df <- do.call(rbind, by(village.geog.df, INDICES=list(village.geog.
 )
 # For now only using the village within the canton that has max population
 
+
+do.drive.time <- FALSE
+
+if (do.drive.time) {
 
 # install.packages("spatstat")
 library("spatstat")
@@ -1080,7 +1095,7 @@ village.geog.df <- village.geog.df[ !duplicated(c("X.on.road", "Y.on.road")), ]
 
 gather.mapquest<-TRUE
 
-# save.image(file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace before mapquest.Rdata")
+# save.image(file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace before mapquest.Rdata")
 
 #A One to Many route matrix call can handle up to 100 locations.
 #A Many to One matrix call can handle up to 50 locations.
@@ -1631,11 +1646,11 @@ for ( targ.input in c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.a
 }
 
 
-#save.image(file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/drive time save workspace.Rdata")
+#save.image(file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/drive time save workspace.Rdata")
 
 
 
-#load(file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/drive time save workspace.Rdata")
+#load(file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/drive time save workspace.Rdata")
 
 
 #inputs.df <- merge(inputs.df,  drive.time.df, all=TRUE)
@@ -1650,7 +1665,7 @@ inputs.df <- test.inputs.df
 # Uses the work above with the drive time
 
 
-
+}
 
 
 
@@ -1699,7 +1714,7 @@ pob.shp$canton.full <- with(pob.shp , paste0(DEPTO, PROVIN, SECCION, CANTON))
 #install.packages("SDMTools", repos="http://cran.us.r-project.org")
 library("SDMTools")
 
-soil.qual.asc <- read.asc("/Users/travismcarthur/Desktop/Metrics (637)/Final paper/sq1.asc", gz = FALSE)
+soil.qual.asc <- read.asc("/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/sq1.asc", gz = FALSE)
 
 
 #cellcentre.offset: numeric; vector with the smallest coordinates for
@@ -1724,7 +1739,7 @@ soil.qual.SP <- SpatialPixels(
 
 
 
-soil.mdb <- read.csv("/Users/travismcarthur/Desktop/Metrics (637)/Final paper/HWSD.csv")
+soil.mdb <- read.csv("/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/HWSD.csv")
 # Used mdb-export command line tool to make csv.
 load(file=paste0( work.dir, "HWSD_RASTER/hwsd.Rdata"))
 
@@ -1733,7 +1748,7 @@ load(file=paste0( work.dir, "HWSD_RASTER/hwsd.Rdata"))
 
 #soil.bil<- readGDAL(paste0(work.dir, "HWSD_RASTER/hwsd.bil"))
 #save(file=paste0( work.dir, "HWSD_RASTER/hwsd.Rdata"),soil.bil)
-load(file=paste0( work.dir, "HWSD_RASTER/hwsd.Rdata"))
+# load(file=paste0( work.dir, "HWSD_RASTER/hwsd.Rdata"))
 
 #soil.mdb<-mdb.get(paste0("'", work.dir, "HWSD.mdb'"))
 
@@ -1906,7 +1921,7 @@ inputs.df$elevation <- inputs.df$elevation/1000
 library("foreign")
 library("PBSmapping")
 library("sp")
-#work.dir <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/"
+#work.dir <- "/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/"
 
 
 
@@ -1964,7 +1979,7 @@ precip.df<-rowSums(precip.df)/(length(target.precip.years))
 # This test is passed
 
 
-rain.grid<-GridTopology(cellcentre.offset=c(-179.75, -89.75), cellsize=c(.5, .5), cells.dim=c(4*2*180, 4*2*90))
+rain.grid <- GridTopology(cellcentre.offset=c(-179.75, -89.75), cellsize=c(.5, .5), cells.dim=c(4*2*180, 4*2*90))
 
 rain.pixels <- SpatialPixels(SpatialPoints(precip.coords) , grid=rain.grid )
 
@@ -2023,12 +2038,12 @@ inputs.df$mean.ann.rain.5yr[is.na(inputs.df$mean.ann.rain.5yr)] <- mean.rainfall
 ######### END GEOG WORK
 
 
-#save(inputs.df, file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and drive time.Rdata")
+#save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and drive time.Rdata")
 
-#save(inputs.df, file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and advanced drive time fixed.Rdata")
+#save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and advanced drive time fixed.Rdata")
 
 
-save(inputs.df, file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata")
+save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata")
 
 
 # rm(list=setdiff(ls(), keep.these))
@@ -2036,13 +2051,13 @@ save(inputs.df, file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rd
 
 
 
-#save.image("/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata")
+#save.image("/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata")
 
-# save(inputs.df, file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata")
+# save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata")
 
-#save(inputs.df, file="/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata")
+#save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata")
 
-# save.image("/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF.Rdata")
+# save.image("/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF.Rdata")
 
 
 #x107.hrs.tractor.spread

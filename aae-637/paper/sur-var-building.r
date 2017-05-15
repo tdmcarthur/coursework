@@ -18,7 +18,7 @@ x01 = firm.df$x19.fertilizante.cantidad.kg
 x02 = firm.df$x19.sem.comprada.cantidad.kg
 x03 = firm.df$tractor.hrs.final
 x04 = firm.df$x19.plagicidas.cantidad.kg
-x05 = firm.df$paid.hours.spread 
+x05 = firm.df$paid.hours.spread + firm.df$ag.fam.labor.equiv.hrs.spread
 x06 = firm.df$x19.abono.cantidad.kg
 # x107.hrs.tractor.spread
 
@@ -148,13 +148,17 @@ industrialization.index[industrialization.index==0] <- 1
 #q03 = industrialization.index
 # SO we will not use indust index for now
 
-q03 = firm.df$ag.fam.labor.equiv.spread
-q03[q03 == 0] = .5
+# q03 = firm.df$ag.fam.labor.equiv.spread
+# q03[q03 == 0] = .5
+# WARNING / TODO: Ok so this above was actually not correct since I hsould have spread the 
+# 0.5 over the plots, but this step here is done after spreading the hours over the plots,
+# and the separation of the datasets into single-crop datasets. But I've made the change to
+# treat family labor as equivalent to hired labor, so this point is moot.
 
 
-q04 <- c(unname(firm.df$soil.quality))
-q05 <- c(unname(firm.df$elevation))
-q06 <- c(unname(firm.df$mean.ann.rain.5yr)) / 100 # Rescaling rainfall 
+q03 <- c(unname(firm.df$soil.quality))
+q04 <- c(unname(firm.df$elevation))
+q05 <- c(unname(firm.df$mean.ann.rain.5yr)) / 100 # Rescaling rainfall 
 # Stripping out some unwanted attributes
 
 

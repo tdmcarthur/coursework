@@ -131,6 +131,7 @@ names(GAMS.nonlinear.results.params.full) <- GAMS.nonlinear.results.params.names
 
 # New way to get param values with more digits of precision
 
+# file.flavor <- "mean-impute-no-cost-fn-no-SUR-logit-attempt"
 
 gdx.params.df <- read.csv(file=paste0(GAMS.projdir, "sgmGMEnonlinearRegimes", strsplit(target.crop, " ")[[1]][1], 
      formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor  , "-param-output.txt"),
@@ -199,7 +200,7 @@ gdx.params.df$param.values[ gdx.params.df$param.names %in% all.params.simple]
 #    file="/Users/travismcarthur/Desktop/Dropbox/entropytesttemp.lst",
 #    sep="\n")
   
-  
+
   
 #}
 
@@ -227,6 +228,10 @@ for ( i in 1:length(all.eqns) ) {
   error.weight.eq.ls[[i]] <- err.weight.temp.df[, -1 ]
 
 }
+
+# TODO: I get this error:
+# Error in scan(file = file, what = what, sep = sep, quote = quote, dec = dec,  : 
+#   line 3961 did not have 10 elements
 
 names(error.weight.eq.ls) <- all.eqns
 

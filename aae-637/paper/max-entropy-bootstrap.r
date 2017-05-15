@@ -5,7 +5,7 @@
 
 
 
-target.top.crop.number <- 2
+target.top.crop.number <- 3
 
 #Including zero cost:
 #Potatoes	4,058
@@ -18,12 +18,13 @@ M <- 1
 N <- 6
 # Standard N is 6
 # J <- 3
-J <- 6
-# Standard J is 6
+J <- 5
+# Standard J is 5 now that HH and hired labor are treated as the same
 
 
 
 do.regimes <- TRUE
+# {}
 
 functional.form <- "SGM" # OR TRANSLOG
 #functional.form <- "TRANSLOG"

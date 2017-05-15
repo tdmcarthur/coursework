@@ -2,7 +2,7 @@
 
 
 
-target.top.crop.number <- 5
+target.top.crop.number <- 2
 
 #Including zero cost:
 #Potatoes	4,058
@@ -24,12 +24,15 @@ text.crop <- "potatoes"
 #text.crop <- "maize"
 text.crop <- "wheat"
 text.crop <- "fava-beans"
+text.crop <- "maize"
 
 
 
-results.ls <- extract.gams.est(file.name = "sgmGMEnonlinearHaba00000 6 fixed inputs.lst")
+results.ls <- extract.gams.est(file.name = "sgmGMEnonlinearRegimesMaiz00000mean-impute-no-cost-fn-no-SUR-logit-attempt.lst")
 # results.ls <- extract.gams.est(file.name = "sgmGMEnonlinearTrigo00000 6 fixed inputs.lst")
 # "sgmGMEnonlinearPapa00000 6 fixed inputs.lst"
+
+# Aaack this does not work for full regimes estmation
 
 gc(); gc(); gc(); gc(); gc(); gc(); gc(); gc(); gc(); gc(); gc(); gc(); 
 

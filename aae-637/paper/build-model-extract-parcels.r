@@ -14,7 +14,7 @@ inputs.df$x19.codigo[inputs.df$x19.codigo %in%
 
 inputs.df$x19.codigo <- factor(inputs.df$x19.codigo)
 
-top.crops <- names(sort(table(inputs.df$x19.codigo), decreasing=TRUE))[1:10]
+top.crops <- names(sort(table(inputs.df$x19.codigo), decreasing=TRUE))
 sort(table(inputs.df$x19.codigo), decreasing=TRUE)[1:10]
 
 # for (target.crop in top.crops) {
@@ -36,7 +36,7 @@ price.to.trim <- c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abon
 # firm.df <- firm.df[!is.na(firm.df$hourly.tractor.rental), ]
 # only kills 2 obseravtions for maiz and zero for Barley
 
-price.trim.criteria <- apply(firm.df[, price.to.trim], 2, FUN=function(x) x < quantile(x, probs=price.trim.quantile) )
+price.trim.criteria <- apply(firm.df[, price.to.trim], 2, FUN=function(x) x <= quantile(x, probs=price.trim.quantile) )
 # <=
 price.trim.criteria <- apply(price.trim.criteria, 1, FUN=all)
 firm.df <- firm.df[price.trim.criteria, ]
@@ -221,7 +221,9 @@ if (functional.form =="SGM") {
   if (synthetic.data) {
     source(paste0(code.dir, "synthetic-data.r"), local=local.source.evaluation)
   }
-  source(paste0(code.dir, "sgm-tobit.r"), local=local.source.evaluation) 
+  if (TRUE) {
+    source(paste0(code.dir, "sgm-tobit.r"), local=local.source.evaluation)
+  }
 
 }
 
