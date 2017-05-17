@@ -1,6 +1,7 @@
 # library("data.table")
 
 
+
 get.bootstraps <- function(directory, param.subset.pattern) {
 
   bootstrap.files <- list.files(directory, full.names = TRUE)
@@ -8,7 +9,7 @@ get.bootstraps <- function(directory, param.subset.pattern) {
   boot.params.ls <- list()
 
   for (targ.file in seq_along(bootstrap.files)) {
-    boot.params.df.temp <- read.csv(bootstrap.files[targ.file], col.names = c("param", "value"), stringsAsFactors = FALSE)
+    boot.params.df.temp <- read.csv(bootstrap.files[targ.file], col.names = c("param", "value"), header = FALSE, stringsAsFactors = FALSE)
     names(boot.params.df.temp)[2] <- paste0("value.", gsub("[^0-9]", "", bootstrap.files[targ.file]))
     cat(targ.file, base::date(), "\n")
     boot.params.ls[[targ.file]] <- boot.params.df.temp[grepl(param.subset.pattern, boot.params.df.temp$param), ]
@@ -40,9 +41,6 @@ get.bootstraps <- function(directory, param.subset.pattern) {
 
 
 
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)|(^lambda)")
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)|(^lambda)")
-
 boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)")
 boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)")
 
@@ -50,10 +48,27 @@ boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc pa
 apply(boot.regimes.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
 apply(boot.simple.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
 
-apply(boot.regimes.df[, -1] - boot.simple.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
+# apply(boot.regimes.df[, -1] - boot.simple.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
 
+boot.cov <- cov(t(boot.simple.df[, -1]), use = "pairwise.complete.obs")
 
+R <- diag(1, 5)
+r <- matrix(1, nrow = nrow(R))
+theta <- boot.simple.df[, 2]
+chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
+dchisq(chi.sq.stat, df = ncol(R))
 
+min.num.boots <- min(c(ncol(boot.simple.df), ncol(boot.regimes.df)))
+boot.cov <- cov(t(rbind(boot.simple.df[, 2:min.num.boots], 
+                        boot.regimes.df[, 2:min.num.boots])), use = "pairwise.complete.obs")
+
+R <- t(rbind(diag(1, 5), (-1) * diag(1, 5)))
+r <- matrix(0, nrow = nrow(R))
+theta <- c(boot.simple.df[, 2], boot.regimes.df[, 2])
+chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
+dchisq(chi.sq.stat, df = ncol(R))
+
+# (boot.cov/1685)
 
 
 
@@ -242,15 +257,112 @@ log.plus.one.cost <- FALSE
 
 # bootstrap.iter <- 1
 bootstrap.iter <- sum(as.numeric(seed.number), na.rm = TRUE)
+cat(bootstrap.iter, "\n")
 # This starts the very first iteration as numeric(0), which actually sums to 0, so we are good
 # NOTE: Bootstrap iter = 0 means actual estimate
 bootstrap.selection.v <- TRUE
 source(paste0(code.dir, "build-model-extract-parcels.r"), local = local.source.evaluation)
 # Above is a bit hacky
 
+combined.df <- data.frame(mget(c("y01", paste0("x", lead.zero(1:N)), 
+  paste0("w", lead.zero(1:N)),  paste0("q", lead.zero(1:J)) )))
+
+if (functional.form =="TRANSLOG") {
+
+region.matrix.df <-   as.data.frame(region.matrix)
+
+
+colnames(region.matrix.df) <- iconv(colnames(region.matrix.df), to="ASCII//TRANSLIT")
+colnames(region.matrix.df) <- gsub("'", "", colnames(region.matrix.df) )
+colnames(region.matrix.df) <- gsub("[.]", "", colnames(region.matrix.df) )
+  
+combined.df <- cbind(combined.df, region.matrix.df)
+
+
+# Below makes use of the fact that we have the original dataframe floating in workspace
+# from the above source()
+
+log10_ceiling <- function(x) {
+    10^(ceiling(log10(x)))
+}
+# Thanks to http://stackoverflow.com/questions/7906996/algorithm-to-round-to-the-next-order-of-magnitude-in-r
+
+input.scaling.orig <- c()
+for ( i in 1:N) {
+
+  input.scaling.orig  <- c( input.scaling.orig, log10_ceiling(
+    sqrt(sum((c(combined.df[, paste0("x", lead.zero(i))], 
+    combined.df[, paste0("w", lead.zero(i))])^2)/(nrow(combined.df)-1)))
+  )
+  )
+  # Got this idea from scale() function
+
+}
+
+scale.vars.on.orig.data <- TRUE
+
+}
+
+
+
+
+
+set.seed(100)
+
+#bootstrap.replications <- 1
+#bootstrap.replications <- 1500
+#nrow(firm.df)
+#nrow(inputs.df)
+#length(unique(inputs.df$folio))
+
+
+bootstrap.replications.v <- 1:1500
+# 0:300 301:600 601:900 901:1200 1201:1500
+# condor_R max-entropy-bootstrap.r bootmaiz1.log &
+
+bootstrap.replications <- max(bootstrap.replications.v)
+
+
+bootstrap.selection.mat<- matrix(sample( x=nrow(firm.df), size=nrow(firm.df)*bootstrap.replications, 
+  replace=TRUE), nrow=nrow(firm.df))
+
+time.counter <- c()
+
+# 1:bootstrap.replications
+
+# bootstrap.iter <- 0
+
+
+file.flavor <- "mean-impute-no-cost-fn-no-SUR-logit-attempt"
+
+
+
+
+
+
+
+
+
+
+
+#for ( bootstrap.iter in c(0, bootstrap.replications.v)) {
+# for ( bootstrap.iter in 0) {
+
+if( bootstrap.iter==0 ) {
+  bootstrap.selection.v <- TRUE
+} else {
+  bootstrap.selection.v <- bootstrap.selection.mat[, bootstrap.iter]
+}
+
+
+#for (target.top.crop.number in c(2,4,5)) {
+
+#if (functional.form =="TRANSLOG") {
+  source(paste0(code.dir, "build-model-extract-parcels.r"), local = local.source.evaluation)
+
 
 combined.df <- data.frame(mget(c("y01", paste0("x", lead.zero(1:N)), 
-  paste0("w", lead.zero(1:N)),  paste0("q", lead.zero(1:J)) ), envir = .GlobalEnv))
+  paste0("w", lead.zero(1:N)),  paste0("q", lead.zero(1:J)) )))
 # Needed to tweak this a bit for the boot.dataset function
 # Also set this to make it faster: do.tobit <- FALSE
 # AND local.source.evaluation <- TRUE
@@ -270,12 +382,60 @@ combined.df
 }
 
 
-boot.regimes.df
 
-combined.df <- boot.dataset(seed.number = 0, target.top.crop.number = 3)
 
-regime.key.df <- unique(combined.df[, c("posi.vars.regime", "regime.cut")])
-regime.key.df$regime.cut <- paste0("lambda", lead.zero(regime.key.df$regime.cut))
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)|(^lambda)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)|(^lambda)")
+
+
+
+regime.key.ls <- list()
+
+for ( seed.number in 0:max(as.numeric( gsub("[^0-9]", "", colnames(boot.regimes.df))), na.rm = TRUE)) {
+  combined.df <- boot.dataset(seed.number = seed.number, target.top.crop.number = 3)
+  regime.key.df <- unique(combined.df[, c("posi.vars.regime", "regime.cut")])
+  regime.key.df$regime.cut <- paste0("lambda", formatC(regime.key.df$regime.cut, width = 2, flag = "0"))
+  colnames(regime.key.df)[2] <- "param"
+  regime.key.ls[[as.character(seed.number)]] <- regime.key.df
+  cat(seed.number, base::date(), "\n")
+}
+
+regime.params.ls <- list()
+
+for (i in as.numeric(names(regime.key.ls))) {
+  #colnames(regime.key.ls[[i]])[2] <- "param"
+  boot.regimes.df.temp <- boot.regimes.df[grepl("^lambda", boot.regimes.df$param), 
+                                          c("param", paste0("value.", formatC(i, width = 5, flag = "0")))]
+  regime.params.ls[[as.character(i)]] <- merge(regime.key.ls[[as.character(i)]], boot.regimes.df.temp)
+  regime.params.ls[[as.character(i)]]$param <- NULL
+}
+
+regime.params.df <- regime.params.ls[[1]]
+
+for (i in 2:length(regime.params.ls)) {
+  regime.params.df <- merge(regime.params.df, regime.params.ls[[i]], all = TRUE)
+}
+
+apply(regime.params.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
+
+
+boot.cov <- cov(t(regime.params.df[, -1]), use = "pairwise.complete.obs")
+
+R <- matrix(0, nrow = nrow(boot.cov), ncol = nrow(boot.cov) - 1)
+for ( i in 1:(nrow(R) - 1)) {
+  R[i, i]     <- 1
+  R[i + 1, i] <- (-1)
+}
+
+R <- t(R)
+r <- matrix(0, nrow = nrow(R))
+theta <- regime.params.df[, 2]
+chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
+dchisq(chi.sq.stat, df = ncol(R))
+
+
+
+
 
 boot.regimes.df$param
 
