@@ -108,7 +108,7 @@ dropped.cost.share.eq <- 10
 
 # saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia project/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
+saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
 
 
 # GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir2/"

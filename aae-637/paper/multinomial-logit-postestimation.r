@@ -345,7 +345,7 @@ xtab.output <- print(xtable(regime.table.prep,
   caption.placement = "top")
   
 cat(xtab.output, sep="n",
-      file=paste0("/Users/travismcarthur/Desktop/Bolivia project/Multinomial logit results/regimes-breakdown-",
+      file=paste0("/Users/travismcarthur/Desktop/Bolivia alloc paper/Multinomial logit results/regimes-breakdown-",
       strsplit(target.crop, " ")[[1]][1], "-regime-", targ.regime, ".tex")
       )
 
@@ -374,7 +374,7 @@ xtab.output <- print(xtable(regime.corr.df,
   caption.placement = "top")
   
 cat(xtab.output, sep="n",
-      file=paste0("/Users/travismcarthur/Desktop/Bolivia project/Multinomial logit results/regimes-prediction-",
+      file=paste0("/Users/travismcarthur/Desktop/Bolivia alloc paper/Multinomial logit results/regimes-prediction-",
       strsplit(target.crop, " ")[[1]][1], ".tex")
       )
 

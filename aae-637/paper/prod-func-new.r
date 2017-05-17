@@ -19,7 +19,7 @@ saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper
 saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata"
 # with soil and rain and elevation
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia project/Data/saved workspace only inputsDF with soil and rain and advanced drive time fixed.Rdata"
+saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and advanced drive time fixed.Rdata"
 
 
 GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir/"
