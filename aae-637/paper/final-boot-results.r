@@ -1,6 +1,7 @@
 # library("data.table")
 
-
+library("xtable")
+library("stargazer")
 
 get.bootstraps <- function(directory, param.subset.pattern) {
 
@@ -12,7 +13,7 @@ get.bootstraps <- function(directory, param.subset.pattern) {
     boot.params.df.temp <- read.csv(bootstrap.files[targ.file], col.names = c("param", "value"), header = FALSE, stringsAsFactors = FALSE)
     names(boot.params.df.temp)[2] <- paste0("value.", gsub("[^0-9]", "", bootstrap.files[targ.file]))
     cat(targ.file, base::date(), "\n")
-    boot.params.df.temp <- boot.params.df.temp[!grepl("^p", boot.params.df.temp$param), ]
+    boot.params.df.temp <- boot.params.df.temp[!grepl("(^p)|(^w)", boot.params.df.temp$param), ]
     boot.params.ls[[targ.file]] <- boot.params.df.temp[grepl(param.subset.pattern, boot.params.df.temp$param), ]
   }
 
@@ -377,10 +378,11 @@ xtable(tli[1:10, ])
 
 boot.regimes.df[, -1]
 
-xi.params.display.df <- cbind(boot.simple.df[, 1:2], boot.simple.sd, boot.regimes.df[, 2], boot.regimes.sd)
+xi.params.display.df <- cbind(boot.simple.df[, 1:2], boot.simple.sd, (boot.simple.df[, 2] - 1 ) / boot.simple.sd,
+                              boot.regimes.df[, 2], boot.regimes.sd, (boot.regimes.df[, 2] - 1 ) / boot.regimes.sd)
 
-colnames(xi.params.display.df) <- c("Parameter", "No selection correction", "St Dev", "Selection correction", "St Dev")
-
+colnames(xi.params.display.df) <- c("Parameter", "No selection correction", "SE", "t-stat", "Selection correction", "SE", "t-stat")
+xi.params.display.df$Parameter <- paste0("$\\", gsub("xi", "xi_{", xi.params.display.df$Parameter), "}$")
 
 
 boot.cov <- cov(t(boot.simple.df[, -1]), use = "pairwise.complete.obs")
@@ -438,8 +440,8 @@ dfList <- list(xi.params.display.df)
 #attr(dfList, "message") <- c("A caption", "Which can have multiple lines")
 attr(dfList, "message") <- c(note.1, note.2, note.3)
 
-cat(print(xtableList(dfList), include.rownames = FALSE), 
-      file = paste0(results.dir, "test.tex"))
+cat(print(xtableList(dfList), include.rownames = FALSE, sanitize.text.function = identity), 
+      file = paste0(results.dir, "xi.tex"))
 
 
 
@@ -505,28 +507,80 @@ boot.cov <- cov(t(regime.params.df[, -1]), use = "pairwise.complete.obs")
 R <- diag(1, nrow(boot.cov))
 r <- matrix(0, nrow = nrow(R))
 theta <- regime.params.df[, 2]
-chi.sq.stat <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
-p.val <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
+chi.sq.stat.lambda <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
+p.val.lambda <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
-chi.sq.stat <- t(R[1:2, 1:2] %*% theta[1:2] - r[1:2]) %*% solve(R[1:2, 1:2] %*% (boot.cov[1:2, 1:2]) %*% t(R[1:2, 1:2])) %*% (R[1:2, 1:2] %*% theta[1:2] - r[1:2])
+#chi.sq.stat <- t(R[1:2, 1:2] %*% theta[1:2] - r[1:2]) %*% solve(R[1:2, 1:2] %*% (boot.cov[1:2, 1:2]) %*% t(R[1:2, 1:2])) %*% (R[1:2, 1:2] %*% theta[1:2] - r[1:2])
 
 
 
 boot.regimes.all.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "06")
-boot.regimes.all.df <- boot.regimes.all.df[!grepl("R", boot.regimes.all.df$param), ]
+boot.regimes.all.df <- boot.regimes.all.df.save <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "")
+boot.regimes.all.df <- boot.regimes.all.df[!grepl("(xi)|(lambda)", boot.regimes.all.df$param), ]
+# "(R)|(lambda)"
+# "(R)|(lambda)|(b)|(s)"
+
 
 boot.cov <- cov(t(boot.regimes.all.df[, -1]), use = "pairwise.complete.obs")
 
-boot.regimes.all.df[, 2] / sqrt(diag(boot.cov))
+tech.params.df  <- data.frame(boot.regimes.all.df[, 1], round(boot.regimes.all.df[, 2], 2), round(boot.regimes.all.df[, 2] / sqrt(diag(boot.cov)), 2))
+
+tech.params.df  <- data.frame(boot.regimes.all.df[, 1], boot.regimes.all.df[, 2], sqrt(diag(boot.cov)), boot.regimes.all.df[, 2] / sqrt(diag(boot.cov)))
+
+names(tech.params.df) <- c("Parameter", "Estimate", "SE", "t-stat") 
+
+
+# Thanks to https://stackoverflow.com/questions/6163823/r-xtable-caption-or-comment
+dfList <- list(tech.params.df)
+#attr(dfList, "message") <- c("A caption", "Which can have multiple lines")
+#attr(dfList, "message") <- c(note.1, note.2, note.3)
+
+cat(print(xtableList(dfList, digits = 3, display = rep("g", 1 + ncol(tech.params.df))), include.rownames = FALSE,
+          sanitize.text.function = identity, tabular.environment = "longtable", floating = FALSE), 
+      file = paste0(results.dir, "tech-params.tex"))
+
+
+
+
+
+
+
 
 R <- diag(1, nrow(boot.cov))
 r <- matrix(0, nrow = nrow(R))
 theta <- boot.regimes.all.df[, 2]
-chi.sq.stat <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
-p.val <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
+chi.sq.stat.q06 <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
+p.val.q06 <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
 
 boot.regimes.df$param
+
+q06.params.display.df <- data.frame(boot.regimes.all.df[, 1], boot.regimes.all.df[, 2], sqrt(diag(boot.cov)), stringsAsFactors = FALSE)
+colnames(q06.params.display.df) <- c("Parameter", "Estimate", "St Dev")
+
+
+
+p.val.display <- ifelse(p.val.q06 ==  0, "$<$ machine precision", paste0("= ", signif(p.val.q06, 3)))
+note.1 <- paste0("$\\chi_{5}^{2}$ Wald statistic on all params equal to $0$: ", round(chi.sq.stat.q06, 2), " (p ", p.val.display, ").") 
+
+
+# Thanks to https://stackoverflow.com/questions/6163823/r-xtable-caption-or-comment
+dfList <- list(q06.params.display.df)
+#attr(dfList, "message") <- c("A caption", "Which can have multiple lines")
+attr(dfList, "message") <- c(note.1)
+
+cat(print(xtableList(dfList, digits = 3, display = rep("g", 1 + ncol(q06.params.display.df))), include.rownames = FALSE), 
+      file = paste0(results.dir, "q06.tex"))
+
+
+
+
+
+
+
+
+
+
 
 
 

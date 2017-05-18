@@ -1,7 +1,7 @@
 
 
 
-additional.cost <- function(seed.number = 0, target.top.crop.number, regimes.eqn = TRUE, result.filename ) {
+additional.cost <- function(seed.number = 0, target.top.crop.number, regimes.eqn = TRUE, set.params.zero = "NONE", result.filename ) {
 
   GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir3/"
   mle.GAMS.output <- TRUE
@@ -368,6 +368,7 @@ xi.param.support <- theta.param.support
 params.df <- read.csv(result.filename, col.names = c("param", "value"), header = FALSE, stringsAsFactors = FALSE)
 GAMS.nonlinear.results.params.full <- params.df$value
 names(GAMS.nonlinear.results.params.full) <- params.df$param
+GAMS.nonlinear.results.params.full[grepl(set.params.zero, names(GAMS.nonlinear.results.params.full))] <- 0
 
 
 
@@ -490,9 +491,9 @@ ret.ls[["distort.input.demand.mat"]] <- y01 * distort.cost.input.mat
 ret.ls[["non.distort.input.demand.mat"]] <- y01 * non.distort.cost.input.mat
 
 
-ret.ls[["E.y01.data.actual"]] <-  E.y01.data  # Actual
-ret.ls[["E.y01.data.predicted"]] <-  with(as.list(GAMS.nonlinear.results.params.full),
-    eval(parse(text=gsub("[.]", "", demand.eqns.nonlinear[[length(demand.eqns.nonlinear)]])))) # Predicted
+#ret.ls[["E.y01.data.actual"]] <-  E.y01.data  # Actual
+#ret.ls[["E.y01.data.predicted"]] <-  with(as.list(GAMS.nonlinear.results.params.full),
+#    eval(parse(text=gsub("[.]", "", demand.eqns.nonlinear[[length(demand.eqns.nonlinear)]])))) # Predicted
 #print( cor(  actual.temp[actual.temp>0] ,  predicted.temp[actual.temp>0]))
 
 
@@ -505,10 +506,10 @@ ret.ls
 
 
 
-add.cost.results.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = TRUE,
+add.cost.results.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = TRUE, set.params.zero = "NONE",
 result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes/sgmGMEnonlinearRegimesCebada00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
 
-add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = FALSE,
+add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = FALSE, set.params.zero = "NONE",
 result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes/sgmGMEnonlinearRegimesCebada00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
 
 
@@ -561,7 +562,7 @@ with(add.cost.results.regimes, {
   for ( i in 1:6) {
   print(
   cor(data[, paste0("x", formatC(i, flag = "0", width = 2))], # Actual
-      non.distort.input.demand.mat[, i] # Predicted
+      distort.input.demand.mat[, i] # Predicted
   ))
 }
 })
@@ -572,12 +573,43 @@ with(add.cost.results.non.regimes, {
   for ( i in 1:6) {
   print(
   cor(data[, paste0("x", formatC(i, flag = "0", width = 2))], # Actual
-      non.distort.input.demand.mat[, i] # Predicted
+      distort.input.demand.mat[, i] # Predicted
   ))
 }
 })
 
-# So yes regimes does predict better
+# So yes regimes does predict slightly better
+
+
+library("stargazer")
+
+test <- with(add.cost.results.regimes, {
+  df <- data.frame(distort.cost.input.mat.non.neg = rowSums(distort.cost.input.mat.non.neg), 
+                non.distort.cost.input.mat.non.neg = rowSums(non.distort.cost.input.mat.non.neg))
+  df$perc.diff <- 100 * (df$distort.cost.input.mat.non.neg - df$non.distort.cost.input.mat.non.neg) / df$non.distort.cost.input.mat.non.neg
+  df <- df[df$distort.cost.input.mat.non.neg > 0 & df$non.distort.cost.input.mat.non.neg > 0 & df$perc.diff > 0, ]
+  
+  print(stargazer(df, summary = TRUE, median = TRUE, type = "text"))
+  
+  df
+})
+
+
+add.cost.results.regimes$distort.cost.input.mat.non.neg[171, ]
+add.cost.results.regimes$non.distort.cost.input.mat.non.neg[171, ]
+
+
+test <- with(add.cost.results.regimes, {
+  df <- data.frame(distort.cost.input.mat.non.neg = rowSums(distort.cost.input.mat), 
+                non.distort.cost.input.mat.non.neg = rowSums(non.distort.cost.input.mat))
+  df <- df[df$distort.cost.input.mat.non.neg > 0 & df$non.distort.cost.input.mat.non.neg > 0, ]
+  df$perc.diff <- 100 * (df$distort.cost.input.mat.non.neg - df$non.distort.cost.input.mat.non.neg) / df$non.distort.cost.input.mat.non.neg
+  
+  print(stargazer(df, summary = TRUE, median = TRUE, type = "text"))
+  
+  df
+})
+
 
 
 
