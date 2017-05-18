@@ -38,40 +38,6 @@ get.bootstraps <- function(directory, param.subset.pattern) {
   ret
 }
 
-
-
-
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)")
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)")
-
-
-apply(boot.regimes.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
-apply(boot.simple.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
-
-# apply(boot.regimes.df[, -1] - boot.simple.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
-
-boot.cov <- cov(t(boot.simple.df[, -1]), use = "pairwise.complete.obs")
-
-R <- diag(1, 5)
-r <- matrix(1, nrow = nrow(R))
-theta <- boot.simple.df[, 2]
-chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
-dchisq(chi.sq.stat, df = ncol(R))
-
-min.num.boots <- min(c(ncol(boot.simple.df), ncol(boot.regimes.df)))
-boot.cov <- cov(t(rbind(boot.simple.df[, 2:min.num.boots], 
-                        boot.regimes.df[, 2:min.num.boots])), use = "pairwise.complete.obs")
-
-R <- t(rbind(diag(1, 5), (-1) * diag(1, 5)))
-r <- matrix(0, nrow = nrow(R))
-theta <- c(boot.simple.df[, 2], boot.regimes.df[, 2])
-chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
-dchisq(chi.sq.stat, df = ncol(R))
-
-# (boot.cov/1685)
-
-
-
 boot.dataset <- function(seed.number, target.top.crop.number) {
 
 # 
@@ -382,12 +348,110 @@ combined.df
 }
 
 
+results.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/tables/"
+
+
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)")
+
+
+boot.regimes.sd <- apply(boot.regimes.df[, -1], 1, FUN = sd, na.rm = TRUE)
+boot.simple.sd <- apply(boot.simple.df[, -1], 1, FUN = sd, na.rm = TRUE)
+
+apply(boot.regimes.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
+apply(boot.simple.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
+
+# apply(boot.regimes.df[, -1] - boot.simple.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
+
+
+
+library(xtable)
+options(xtable.floating = FALSE)
+options(xtable.timestamp = "")
+
+data(tli)
+xtable(tli[1:10, ])
+
+
+
+boot.regimes.df[, -1]
+
+xi.params.display.df <- cbind(boot.simple.df[, 1:2], boot.simple.sd, boot.regimes.df[, 2], boot.regimes.sd)
+
+colnames(xi.params.display.df) <- c("Parameter", "No selection correction", "St Dev", "Selection correction", "St Dev")
+
+
+
+boot.cov <- cov(t(boot.simple.df[, -1]), use = "pairwise.complete.obs")
+
+R <- diag(1, 5)
+r <- matrix(1, nrow = nrow(R))
+theta <- boot.simple.df[, 2]
+chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
+p.val <- dchisq(chi.sq.stat, df = ncol(R))
+
+chi.sq.stat.simple <- chi.sq.stat
+p.val.simple <- p.val
+
+boot.cov <- cov(t(boot.regimes.df[, -1]), use = "pairwise.complete.obs")
+
+R <- diag(1, 5)
+r <- matrix(1, nrow = nrow(R))
+theta <- boot.regimes.df[, 2]
+chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
+p.val <- dchisq(chi.sq.stat, df = ncol(R))
+
+chi.sq.stat.regimes <- chi.sq.stat
+p.val.regimes <- p.val
+
+min.num.boots <- min(c(ncol(boot.simple.df), ncol(boot.regimes.df)))
+boot.cov <- cov(t(rbind(boot.simple.df[, 2:min.num.boots], 
+                        boot.regimes.df[, 2:min.num.boots])), use = "pairwise.complete.obs")
+
+
+R <- t(rbind(diag(1, 5), (-1) * diag(1, 5)))
+r <- matrix(0, nrow = nrow(R))
+theta <- c(boot.simple.df[, 2], boot.regimes.df[, 2])
+chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
+p.val <- dchisq(chi.sq.stat, df = ncol(R))
+
+chi.sq.stat.simple.regimes.compare <- chi.sq.stat
+p.val.simple.regimes.compare <- p.val
+
+# (boot.cov/1685)
+
+# Super useful:
+# https://cran.r-project.org/web/packages/xtable/vignettes/xtableGallery.pdf
+
+p.val.display <- ifelse(p.val.simple ==  0, "$<$ machine precision", paste0("= ", signif(p.val.simple, 3)))
+note.1 <- paste0("No selection correction: $\\chi_{5}^{2}$ Wald statistic on $\\xi_{k} = 1$, $\\forall$ $k$: ", round(chi.sq.stat.simple, 2), " (p ", p.val.display, ").") 
+
+p.val.display <- ifelse(p.val.regimes ==  0, "$<$ machine precision", paste0("= ", signif(p.val.regimes, 3)))
+note.2 <- paste0("Selection correction: $\\chi_{5}^{2}$ Wald statistic on $\\xi_{k} = 1$, $\\forall$ $k$: ", round(chi.sq.stat.regimes, 2), " (p ", p.val.display, ").") 
+
+p.val.display <- ifelse(p.val.simple.regimes.compare ==  0, "$<$ machine precision", paste0("= ", signif(p.val.simple.regimes.compare, 3)))
+note.3 <- paste0("$\\chi_{5}^{2}$ Wald statistic on $\\xi_{k}^{No \\hphantom{o} correction} = \\xi_{k}^{Correction}$, $\\forall$ $k$: ", round(chi.sq.stat.simple.regimes.compare, 2), " (p ", p.val.display, ").") 
+
+# Thanks to https://stackoverflow.com/questions/6163823/r-xtable-caption-or-comment
+dfList <- list(xi.params.display.df)
+#attr(dfList, "message") <- c("A caption", "Which can have multiple lines")
+attr(dfList, "message") <- c(note.1, note.2, note.3)
+
+cat(print(xtableList(dfList), include.rownames = FALSE), 
+      file = paste0(results.dir, "test.tex"))
+
+
+
+
+
+
 
 
 boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)|(^lambda)")
 boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)|(^lambda)")
 
 
+if (FALSE) {
 
 regime.key.ls <- list()
 
@@ -401,9 +465,17 @@ for ( seed.number in 0:max(as.numeric( gsub("[^0-9]", "", colnames(boot.regimes.
   cat(seed.number, base::date(), "\n")
 }
 
+# save(regime.key.ls, file = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata")
+# load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata", verbose = TRUE)
+
+}
+
+load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata", verbose = TRUE)
+
 regime.params.ls <- list()
 
-for (i in as.numeric(names(regime.key.ls))) {
+# for (i in as.numeric(names(regime.key.ls))) {
+for (i in 0:(ncol(boot.regimes.df) - 2)) {
   #colnames(regime.key.ls[[i]])[2] <- "param"
   boot.regimes.df.temp <- boot.regimes.df[grepl("^lambda", boot.regimes.df$param), 
                                           c("param", paste0("value.", formatC(i, width = 5, flag = "0")))]
@@ -434,6 +506,12 @@ r <- matrix(0, nrow = nrow(R))
 theta <- regime.params.df[, 2]
 chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
 dchisq(chi.sq.stat, df = ncol(R))
+
+chi.sq.stat <- t(R[1:2, 1:2] %*% theta[1:2] - r[1:2]) %*% solve(R[1:2, 1:2] %*% (boot.cov[1:2, 1:2]) %*% t(R[1:2, 1:2])) %*% (R[1:2, 1:2] %*% theta[1:2] - r[1:2])
+
+
+aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
+aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
 
 
