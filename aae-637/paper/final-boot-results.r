@@ -387,8 +387,8 @@ boot.cov <- cov(t(boot.simple.df[, -1]), use = "pairwise.complete.obs")
 R <- diag(1, 5)
 r <- matrix(1, nrow = nrow(R))
 theta <- boot.simple.df[, 2]
-chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
-p.val <- dchisq(chi.sq.stat, df = ncol(R))
+chi.sq.stat <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
+p.val <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
 chi.sq.stat.simple <- chi.sq.stat
 p.val.simple <- p.val
@@ -398,8 +398,8 @@ boot.cov <- cov(t(boot.regimes.df[, -1]), use = "pairwise.complete.obs")
 R <- diag(1, 5)
 r <- matrix(1, nrow = nrow(R))
 theta <- boot.regimes.df[, 2]
-chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
-p.val <- dchisq(chi.sq.stat, df = ncol(R))
+chi.sq.stat <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
+p.val <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
 chi.sq.stat.regimes <- chi.sq.stat
 p.val.regimes <- p.val
@@ -412,8 +412,8 @@ boot.cov <- cov(t(rbind(boot.simple.df[, 2:min.num.boots],
 R <- t(rbind(diag(1, 5), (-1) * diag(1, 5)))
 r <- matrix(0, nrow = nrow(R))
 theta <- c(boot.simple.df[, 2], boot.regimes.df[, 2])
-chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
-p.val <- dchisq(chi.sq.stat, df = ncol(R))
+chi.sq.stat <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
+p.val <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
 chi.sq.stat.simple.regimes.compare <- chi.sq.stat
 p.val.simple.regimes.compare <- p.val
@@ -504,14 +504,13 @@ boot.cov <- cov(t(regime.params.df[, -1]), use = "pairwise.complete.obs")
 R <- diag(1, nrow(boot.cov))
 r <- matrix(0, nrow = nrow(R))
 theta <- regime.params.df[, 2]
-chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)
-dchisq(chi.sq.stat, df = ncol(R))
+chi.sq.stat <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
+p.val <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
 chi.sq.stat <- t(R[1:2, 1:2] %*% theta[1:2] - r[1:2]) %*% solve(R[1:2, 1:2] %*% (boot.cov[1:2, 1:2]) %*% t(R[1:2, 1:2])) %*% (R[1:2, 1:2] %*% theta[1:2] - r[1:2])
 
 
-aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
-aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
+
 
 
 
