@@ -392,6 +392,7 @@ boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc pa
 regime.key.ls <- list()
 
 for ( seed.number in 0:max(as.numeric( gsub("[^0-9]", "", colnames(boot.regimes.df))), na.rm = TRUE)) {
+# for ( seed.number in 301:500) {
   combined.df <- boot.dataset(seed.number = seed.number, target.top.crop.number = 3)
   regime.key.df <- unique(combined.df[, c("posi.vars.regime", "regime.cut")])
   regime.key.df$regime.cut <- paste0("lambda", formatC(regime.key.df$regime.cut, width = 2, flag = "0"))
@@ -421,13 +422,14 @@ apply(regime.params.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = 
 
 boot.cov <- cov(t(regime.params.df[, -1]), use = "pairwise.complete.obs")
 
-R <- matrix(0, nrow = nrow(boot.cov), ncol = nrow(boot.cov) - 1)
-for ( i in 1:(nrow(R) - 1)) {
-  R[i, i]     <- 1
-  R[i + 1, i] <- (-1)
-}
+#R <- matrix(0, nrow = nrow(boot.cov), ncol = nrow(boot.cov) - 1)
+#for ( i in 1:(nrow(R) - 1)) {
+#  R[i, i]     <- 1
+#  R[i + 1, i] <- (-1)
+#}
+# R <- t(R)
 
-R <- t(R)
+R <- diag(1, nrow(boot.cov))
 r <- matrix(0, nrow = nrow(R))
 theta <- regime.params.df[, 2]
 chi.sq.stat <- t(R %*% theta - r) %*% solve(R %*% (boot.cov) %*% t(R)) %*% (R %*% theta - r)

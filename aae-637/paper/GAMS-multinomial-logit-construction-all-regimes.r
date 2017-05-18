@@ -762,7 +762,7 @@ completed.GAMS.file <-  c(
 )
 
 
-mle.GAMS.output <- TRUE
+
 
 
 if ( mle.GAMS.output ) { 

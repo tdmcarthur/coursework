@@ -107,7 +107,7 @@ cond_logit_predict <- function(b0, outcome) {
 J <- J + 1
 # This make room for the correction factor
 
-source(paste0(code.dir, "sgm-linear-sur-building.r"))  
+source(paste0(code.dir, "sgm-linear-sur-building.r"), local = local.source.evaluation)
 
 
 

@@ -446,7 +446,7 @@ if ( do.regimes) {
   source(paste0(code.dir, "regimes-full-power-set.r"))
   
   # source(paste0(code.dir, "GAMS-multinomial-logit-construction.r"))
-  
+  mle.GAMS.output <- TRUE
   source(paste0(code.dir, "GAMS-multinomial-logit-construction-all-regimes.r"))
   
   
