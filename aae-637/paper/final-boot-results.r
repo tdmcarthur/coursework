@@ -12,6 +12,7 @@ get.bootstraps <- function(directory, param.subset.pattern) {
     boot.params.df.temp <- read.csv(bootstrap.files[targ.file], col.names = c("param", "value"), header = FALSE, stringsAsFactors = FALSE)
     names(boot.params.df.temp)[2] <- paste0("value.", gsub("[^0-9]", "", bootstrap.files[targ.file]))
     cat(targ.file, base::date(), "\n")
+    boot.params.df.temp <- boot.params.df.temp[!grepl("^p", boot.params.df.temp$param), ]
     boot.params.ls[[targ.file]] <- boot.params.df.temp[grepl(param.subset.pattern, boot.params.df.temp$param), ]
   }
 
@@ -511,9 +512,18 @@ chi.sq.stat <- t(R[1:2, 1:2] %*% theta[1:2] - r[1:2]) %*% solve(R[1:2, 1:2] %*% 
 
 
 
+boot.regimes.all.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "06")
+boot.regimes.all.df <- boot.regimes.all.df[!grepl("R", boot.regimes.all.df$param), ]
 
+boot.cov <- cov(t(boot.regimes.all.df[, -1]), use = "pairwise.complete.obs")
 
+boot.regimes.all.df[, 2] / sqrt(diag(boot.cov))
 
+R <- diag(1, nrow(boot.cov))
+r <- matrix(0, nrow = nrow(R))
+theta <- boot.regimes.all.df[, 2]
+chi.sq.stat <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
+p.val <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
 
 boot.regimes.df$param

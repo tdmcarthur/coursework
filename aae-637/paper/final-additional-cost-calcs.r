@@ -489,6 +489,13 @@ for ( i in 1:demand.eqn.num) {
 ret.ls[["distort.input.demand.mat"]] <- y01 * distort.cost.input.mat
 ret.ls[["non.distort.input.demand.mat"]] <- y01 * non.distort.cost.input.mat
 
+
+ret.ls[["E.y01.data.actual"]] <-  E.y01.data  # Actual
+ret.ls[["E.y01.data.predicted"]] <-  with(as.list(GAMS.nonlinear.results.params.full),
+    eval(parse(text=gsub("[.]", "", demand.eqns.nonlinear[[length(demand.eqns.nonlinear)]])))) # Predicted
+#print( cor(  actual.temp[actual.temp>0] ,  predicted.temp[actual.temp>0]))
+
+
 ret.ls[["data"]] <- combined.df
 
 ret.ls
@@ -549,11 +556,42 @@ with(add.cost.results.regimes, {
 
 
 
+with(add.cost.results.regimes, {
+  #print(cor(E.y01.data.actual, E.y01.data.predicted))
+  for ( i in 1:6) {
+  print(
+  cor(data[, paste0("x", formatC(i, flag = "0", width = 2))], # Actual
+      non.distort.input.demand.mat[, i] # Predicted
+  ))
+}
+})
+
+
+with(add.cost.results.non.regimes, {
+  #print(cor(E.y01.data.actual, E.y01.data.predicted))
+  for ( i in 1:6) {
+  print(
+  cor(data[, paste0("x", formatC(i, flag = "0", width = 2))], # Actual
+      non.distort.input.demand.mat[, i] # Predicted
+  ))
+}
+})
+
+# So yes regimes does predict better
+
+
+
+
+
+
+
+
+
 if (FALSE) {
 
 
 
-
+result.filename <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes/sgmGMEnonlinearRegimesCebada00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt"
 params.df <- read.csv(result.filename, col.names = c("param", "value"), header = FALSE, stringsAsFactors = FALSE)
 GAMS.nonlinear.results.params.full <- params.df$value
 names(GAMS.nonlinear.results.params.full) <- params.df$param
