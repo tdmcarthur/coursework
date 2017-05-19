@@ -66,7 +66,8 @@ if (!synthetic.data) {
 #  start.nonlin.from.ignorance <- TRUE
   global.max.seed <- 4
   do.SUR <- FALSE
-  include.cost.fn <- FALSE
+  include.cost.fn <- TRUE
+  # NOTE: I changed this to include cost function
   only.cost.fn <- FALSE
   generate.synth.data.from.cost.fn <- FALSE
   start.at.true.xi <- FALSE
@@ -354,6 +355,10 @@ xi.param.support <- theta.param.support
   
   source(paste0(code.dir, "sgm-linear-sur-building.r"), local = local.source.evaluation) 
   source(paste0(code.dir, "sgm-GAMS-linear-construction.r"), local = local.source.evaluation)
+  start.nonlin.from.ignorance <- TRUE 
+  global.max.seed <- 0
+  # Setting global.max.seed to 0 prevents the thing from trying to do the constrained optim because
+  # of the start.nonlin.from.ignorance <- TRUE
   source(paste0(code.dir, "sgm-GAMS-nonlinear-construction.r"), local = local.source.evaluation)
 
   
@@ -491,10 +496,14 @@ ret.ls[["distort.input.demand.mat"]] <- y01 * distort.cost.input.mat
 ret.ls[["non.distort.input.demand.mat"]] <- y01 * non.distort.cost.input.mat
 
 
-#ret.ls[["E.y01.data.actual"]] <-  E.y01.data  # Actual
-#ret.ls[["E.y01.data.predicted"]] <-  with(as.list(GAMS.nonlinear.results.params.full),
-#    eval(parse(text=gsub("[.]", "", demand.eqns.nonlinear[[length(demand.eqns.nonlinear)]])))) # Predicted
+ret.ls[["E.y01.data.actual"]] <-  E.y01.data  # Actual
+ret.ls[["E.y01.data.predicted"]] <-  with(as.list(GAMS.nonlinear.results.params.full),
+    eval(parse(text=gsub("[.]", "", demand.eqns.nonlinear[[length(demand.eqns.nonlinear)]])))) # Predicted
 #print( cor(  actual.temp[actual.temp>0] ,  predicted.temp[actual.temp>0]))
+
+ret.ls[["demand.eqns.nonlinear"]] <- demand.eqns.nonlinear
+ret.ls[["distort.params"]] <- GAMS.nonlinear.results.params.full
+ret.ls[["non.distort.params"]] <- non.distort.params
 
 
 ret.ls[["data"]] <- combined.df
@@ -583,16 +592,35 @@ with(add.cost.results.non.regimes, {
 
 library("stargazer")
 
+results.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/tables/"
+
 test <- with(add.cost.results.regimes, {
   df <- data.frame(distort.cost.input.mat.non.neg = rowSums(distort.cost.input.mat.non.neg), 
                 non.distort.cost.input.mat.non.neg = rowSums(non.distort.cost.input.mat.non.neg))
   df$perc.diff <- 100 * (df$distort.cost.input.mat.non.neg - df$non.distort.cost.input.mat.non.neg) / df$non.distort.cost.input.mat.non.neg
   df <- df[df$distort.cost.input.mat.non.neg > 0 & df$non.distort.cost.input.mat.non.neg > 0 & df$perc.diff > 0, ]
   
-  print(stargazer(df, summary = TRUE, median = TRUE, type = "text"))
+  colnames(df) <- c("Inefficient expenditure", "Efficient expenditure", "Percent difference")
+  
+  stargazer(df, summary = TRUE, median = TRUE, out = paste0(results.dir, "distort-cost.tex"),
+            nobs = FALSE, digits = 2, notes = "The 2008 exchange rate was about 7.4 Bolivianos per USD.")
   
   df
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 add.cost.results.regimes$distort.cost.input.mat.non.neg[171, ]

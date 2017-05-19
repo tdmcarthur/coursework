@@ -546,6 +546,15 @@ cat(print(xtableList(dfList, digits = 3, display = rep("g", 1 + ncol(tech.params
 
 
 
+
+
+
+
+
+
+
+
+
 R <- diag(1, nrow(boot.cov))
 r <- matrix(0, nrow = nrow(R))
 theta <- boot.regimes.all.df[, 2]
