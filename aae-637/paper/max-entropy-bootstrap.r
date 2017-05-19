@@ -5,7 +5,7 @@
 ## source("/Users/travismcarthur/git/coursework/aae-637/paper/max-entropy-bootstrap.r")
 ## source("/Users/travismcarthur/git/coursework/aae-637/paper/gme-control-code.r")
 
-
+add.family.labor.to.hired.labor <- FALSE
 
 target.top.crop.number <- 3
 
@@ -20,8 +20,13 @@ M <- 1
 N <- 6
 # Standard N is 6
 # J <- 3
-J <- 5
+if (add.family.labor.to.hired.labor) {
+  J <- 5
+} else {
+  J <- 6
+}
 # Standard J is 5 now that HH and hired labor are treated as the same
+# But 6 if add.family.labor.to.hired.labor == FALSE
 
 
 
@@ -128,7 +133,11 @@ if (Sys.info()['sysname']=="Linux") {
 
 saved.workspace.path <- "/home/k/kzaman/TravisImInYourInternets/input-data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata" # "/home/k/kzaman/TravisImInYourInternets/bootstrap-output/saved workspace.Rdata" NEED TO FIX # saved workspace only inputsDF with soil.Rdata
 
-GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir/"
+if (add.family.labor.to.hired.labor) {
+  GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir/"
+} else {
+  GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir2/"
+}
 
 GAMS.exe.path <- "/home/k/kzaman/TravisImInYourInternets/gams24.7_linux_x64_64_sfx/gams"
 

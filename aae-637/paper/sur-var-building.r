@@ -18,7 +18,11 @@ x01 = firm.df$x19.fertilizante.cantidad.kg
 x02 = firm.df$x19.sem.comprada.cantidad.kg
 x03 = firm.df$tractor.hrs.final
 x04 = firm.df$x19.plagicidas.cantidad.kg
-x05 = firm.df$paid.hours.spread + firm.df$ag.fam.labor.equiv.hrs.spread
+if (add.family.labor.to.hired.labor) {
+  x05 = firm.df$paid.hours.spread + firm.df$ag.fam.labor.equiv.hrs.spread
+} else {
+  x05 = firm.df$paid.hours.spread
+}
 x06 = firm.df$x19.abono.cantidad.kg
 # x107.hrs.tractor.spread
 
@@ -156,12 +160,20 @@ industrialization.index[industrialization.index==0] <- 1
 # treat family labor as equivalent to hired labor, so this point is moot.
 
 
-q03 <- c(unname(firm.df$soil.quality))
-q04 <- c(unname(firm.df$elevation))
-q05 <- c(unname(firm.df$mean.ann.rain.5yr)) / 100 # Rescaling rainfall 
-# Stripping out some unwanted attributes
-q06 <- rep(0, times = length(q05))
+if (add.family.labor.to.hired.labor) {
+  q03 <- c(unname(firm.df$soil.quality))
+  q04 <- c(unname(firm.df$elevation))
+  q05 <- c(unname(firm.df$mean.ann.rain.5yr)) / 100 # Rescaling rainfall 
+  # Stripping out some unwanted attributes
+  q06 <- rep(0, times = length(q05))
 # This q06 is just to "fool" sgm-GAMS-linear-construction when we want to do a conditional expectation correction
+} else {
+  q03 = firm.df$ag.fam.labor.equiv.hrs.spread
+  q04 <- c(unname(firm.df$soil.quality))
+  q05 <- c(unname(firm.df$elevation))
+  q06 <- c(unname(firm.df$mean.ann.rain.5yr)) / 100 # Rescaling rainfall 
+  
+}
 
 
 if (log.plus.one.cost) {

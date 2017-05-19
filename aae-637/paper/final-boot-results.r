@@ -440,7 +440,9 @@ dfList <- list(xi.params.display.df)
 #attr(dfList, "message") <- c("A caption", "Which can have multiple lines")
 attr(dfList, "message") <- c(note.1, note.2, note.3)
 
-cat(print(xtableList(dfList), include.rownames = FALSE, sanitize.text.function = identity), 
+to.output <- print(xtableList(dfList, caption = "Estimated shadow price parameters"), floating = TRUE, include.rownames = FALSE, sanitize.text.function = identity, caption.placement = "top")
+
+cat(gsub("xi", "theta", to.output), 
       file = paste0(results.dir, "xi.tex"))
 
 
@@ -514,7 +516,7 @@ p.val.lambda <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["
 
 
 
-boot.regimes.all.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "06")
+# boot.regimes.all.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "06")
 boot.regimes.all.df <- boot.regimes.all.df.save <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "")
 boot.regimes.all.df <- boot.regimes.all.df[!grepl("(xi)|(lambda)", boot.regimes.all.df$param), ]
 # "(R)|(lambda)"
@@ -535,8 +537,9 @@ dfList <- list(tech.params.df)
 #attr(dfList, "message") <- c("A caption", "Which can have multiple lines")
 #attr(dfList, "message") <- c(note.1, note.2, note.3)
 
-cat(print(xtableList(dfList, digits = 3, display = rep("g", 1 + ncol(tech.params.df))), include.rownames = FALSE,
-          sanitize.text.function = identity, tabular.environment = "longtable", floating = FALSE), 
+cat(print(xtableList(dfList, digits = 3, display = rep("g", 1 + ncol(tech.params.df)), 
+                     caption = "Technological parameters of cost function"), include.rownames = FALSE,
+          sanitize.text.function = identity, tabular.environment = "longtable", floating = FALSE, caption.placement = "top"), 
       file = paste0(results.dir, "tech-params.tex"))
 
 

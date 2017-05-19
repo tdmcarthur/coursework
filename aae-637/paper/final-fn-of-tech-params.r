@@ -96,7 +96,7 @@ library("xtable")
 results.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/tables/"
 
 xtab.output <- print(xtable(morishima.mat,
-  caption = "Morishima elasticties of substitution, evaluated at mean of data. Row is $i$. Column is $j$."), floating = TRUE)
+  caption = "Morishima elasticties of substitution, evaluated at mean of data. Row is $i$. Column is $j$."), floating = TRUE, caption.placement = "top")
 cat(xtab.output, sep = "\n",
       file = paste0(results.dir, "morishima-table.tex")
       )

@@ -603,6 +603,7 @@ test <- with(add.cost.results.regimes, {
   colnames(df) <- c("Inefficient expenditure", "Efficient expenditure", "Percent difference")
   
   stargazer(df, summary = TRUE, median = TRUE, out = paste0(results.dir, "distort-cost.tex"),
+            title = "Excess cost due to allocative inefficiency",
             nobs = FALSE, digits = 2, notes = "The 2008 exchange rate was about 7.4 Bolivianos per USD.")
   
   df
