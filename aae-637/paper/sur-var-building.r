@@ -168,10 +168,12 @@ if (add.family.labor.to.hired.labor) {
   q06 <- rep(0, times = length(q05))
 # This q06 is just to "fool" sgm-GAMS-linear-construction when we want to do a conditional expectation correction
 } else {
-  q03 = firm.df$ag.fam.labor.equiv.hrs.spread
+  q03 <- c(unname(firm.df$ag.fam.labor.equiv.hrs.spread))
   q04 <- c(unname(firm.df$soil.quality))
   q05 <- c(unname(firm.df$elevation))
   q06 <- c(unname(firm.df$mean.ann.rain.5yr)) / 100 # Rescaling rainfall 
+  q07 <- rep(0, times = length(q06))
+  # This q06 is just to "fool" sgm-GAMS-linear-construction when we want to do a conditional expectation correction
   
 }
 

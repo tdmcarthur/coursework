@@ -70,11 +70,15 @@ temp.E.y01.data <- (firm.df$x19.fertilizante.cantidad.kg * firm.df$x19.fertiliza
 temp.demand.var.trim.criteria <- temp.E.y01.data < quantile(temp.E.y01.data[temp.E.y01.data>0], probs=demand.var.trim.quantile)
 # <=
 
+output.var.trim.criteria <- firm.df$x19.produccion.obtenidad.kg <= 
+  quantile(firm.df$x19.produccion.obtenidad.kg[firm.df$x19.produccion.obtenidad.kg > 0], probs = output.var.trim.quantile)
+# Note that this is less than or equal to, so output.var.trim.quantile = 1 would mean no trimming
+
 #demand.var.trim.criteria <- cbind(demand.var.trim.criteria, temp.demand.var.trim.criteria)
 
 demand.var.trim.criteria <- apply(demand.var.trim.criteria, 1, FUN=all)
 
-firm.df <- firm.df[demand.var.trim.criteria, ]
+firm.df <- firm.df[demand.var.trim.criteria & output.var.trim.criteria, ]
 
 }
 

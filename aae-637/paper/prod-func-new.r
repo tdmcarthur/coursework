@@ -83,6 +83,7 @@ N <- 6
 
 price.trim.quantile <- 0.99
 demand.var.trim.quantile <- 0.95
+output.var.trim.quantile <- 1
 functional.form <- "SGM"
 #demand.var.trim.quantile <- 1
 
