@@ -38,6 +38,7 @@ for ( i in grep("obtenidad.quintal", colnames(inputs.df)) ) {
 # "One Bolivian arroba is equivalent to 11.5 kg"
 # "One Bolivian quintal is equivalent to 46 kg"
 # Also here: http://sizes.com/units/quintal.htm
+# AND HERE: "/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/bd67/MORE INFO/Manual Encuestador EA.pdf"
 
 for ( i in grep("bs.quintal", colnames(inputs.df)) ) {
   inputs.df[, gsub("bs.quintal", "bs.kg", colnames(inputs.df)[i]) ] <- inputs.df[, i] / 46

@@ -50,7 +50,8 @@ demand.var.to.trim <- c(
   "x19.abono.cantidad.kg", 
   "x19.plagicidas.cantidad.kg",
   "paid.hours.spread", "tractor.hrs.final")
-  
+
+fixed.input.var.to.trim <- c("x19.superficie.cultivada.hectareas", "ag.fam.labor.equiv.hrs.spread")
 
 
 
@@ -74,11 +75,17 @@ output.var.trim.criteria <- firm.df$x19.produccion.obtenidad.kg <=
   quantile(firm.df$x19.produccion.obtenidad.kg[firm.df$x19.produccion.obtenidad.kg > 0], probs = output.var.trim.quantile)
 # Note that this is less than or equal to, so output.var.trim.quantile = 1 would mean no trimming
 
+fixed.input.var.trim.criteria <- apply(firm.df[, fixed.input.var.to.trim]/firm.df$x19.produccion.obtenidad.kg, 2, 
+  FUN=function(x) x <= quantile(x[x>0], probs = fixed.input.var.trim.quantile) )
+# Note that this is less than or equal to, so output.var.trim.quantile = 1 would mean no trimming
+
 #demand.var.trim.criteria <- cbind(demand.var.trim.criteria, temp.demand.var.trim.criteria)
 
 demand.var.trim.criteria <- apply(demand.var.trim.criteria, 1, FUN=all)
+fixed.input.var.trim.criteria <- apply(fixed.input.var.trim.criteria, 1, FUN=all)
 
-firm.df <- firm.df[demand.var.trim.criteria & output.var.trim.criteria, ]
+
+firm.df <- firm.df[demand.var.trim.criteria & output.var.trim.criteria & fixed.input.var.trim.criteria, ]
 
 }
 

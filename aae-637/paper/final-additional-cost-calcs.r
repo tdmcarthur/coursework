@@ -102,6 +102,7 @@ if (functional.form =="SGM") {
 price.trim.quantile <- 0.95
 demand.var.trim.quantile <- 0.95
 output.var.trim.quantile <- 1
+fixed.input.var.trim.quantile <- 1
 #demand.var.trim.quantile <- 1
 
 
