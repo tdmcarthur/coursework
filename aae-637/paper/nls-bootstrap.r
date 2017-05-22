@@ -1,36 +1,153 @@
 
+
+
 # 
 
 ## source("/Users/travismcarthur/git/coursework/aae-637/paper/initial-data-setup.r")
+## source("/Users/travismcarthur/git/coursework/aae-637/paper/max-entropy-bootstrap.r")
+## source("/Users/travismcarthur/git/coursework/aae-637/paper/gme-control-code.r")
+
+add.family.labor.to.hired.labor <- FALSE
+
+target.top.crop.number <- 1
+
+#Including zero cost:
+#Potatoes	4,058
+#Maize	3,440
+#Barley	2,048
+#Wheat	1,647
+#Fava Beans	1,484
+
+M <- 1
+N <- 6
+# Standard N is 6
+# J <- 3
+if (add.family.labor.to.hired.labor) {
+  J <- 5
+} else {
+  J <- 6
+}
+# Standard J is 5 now that HH and hired labor are treated as the same
+# But 6 if add.family.labor.to.hired.labor == FALSE
+
+
+
+do.regimes <- TRUE
+# {}
+
+functional.form <- "SGM" # OR TRANSLOG
+#functional.form <- "TRANSLOG"
+
+do.tobit <- TRUE
+# Necessary
+
+
+#synthetic.data <-TRUE
+ synthetic.data <- FALSE
+if (!exists("global.max.seed")) { global.max.seed <- 0}
+do.SUR <- FALSE
+include.cost.fn <- FALSE
+only.cost.fn <- TRUE
+generate.synth.data.from.cost.fn <- TRUE
+start.at.true.xi <- FALSE
+start.nonlin.from.ignorance <- TRUE
+convex.in.f.inputs <- FALSE
+concave.in.prices <- TRUE
+# NOTE: J, i.e. number of fixed inputs, is set via sgm-linear-sur-building.r
+
+
+
+if (!synthetic.data) { 
+  intended.seed <- 100 
+  start.nonlin.from.ignorance <- FALSE
+#  start.nonlin.from.ignorance <- TRUE
+  global.max.seed <- 4
+  do.SUR <- FALSE
+  include.cost.fn <- FALSE
+  only.cost.fn <- FALSE
+  generate.synth.data.from.cost.fn <- FALSE
+  start.at.true.xi <- FALSE
+}
+
+
+
+# Only posi cost observations:
+
+#Papa (patatas)    3155 
+#Maiz combined   1838 
+#Cebada combined   950 
+#Trigo             475 
+#Haba (verde)       641 
+#Oca               240 
+#Arveja (verde)     217 
+#Hoja de coca       363 
+#Arroz con cascara          264
+#Quinua            284 
 
 
 
 
+# do.SUR <- TRUE
+
+#functional.form <- "TRANSLOG"
+
+if (functional.form =="SGM") {
+  include.censored.cost <- FALSE
+}
+
+price.trim.quantile <- 0.95
+demand.var.trim.quantile <- 0.95
+output.var.trim.quantile <- 1
+fixed.input.var.trim.quantile <- 1
+#demand.var.trim.quantile <- 1
 
 
+local.source.evaluation <- FALSE
+dropped.cost.share.eq <- 10
+# anything >6 means that no equation gets dropped
 
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/GAMS work/saved workspace.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/GAMS work/saved workspace.Rdata"
 
-GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir/"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil.Rdata"
+# with soil
 
-GAMS.exe.path <- "/Applications/GAMS/gams24.1_osx_x64_64_sfx/gams"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain.Rdata"
+# with soil and rain and elevation
+
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
+
+saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
+
+
+# GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir2/"
+GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir3/"
+
+# GAMS.exe.path <- "/Applications/GAMS/gams24.1_osx_x64_64_sfx/gams"
+GAMS.exe.path <- "/Applications/GAMS24.7/sysdir/gams"
+
 
 code.dir <- "/Users/travismcarthur/git/coursework/aae-637/paper/"
+
+
 
 # GAMS.projdir.subdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir/bootstrap/"
 
 if (Sys.info()['sysname']=="Linux") {
 
-saved.workspace.path <- "/home/c/cschmidt/TravisImInYourInternets/bootstrap-output/saved workspace.Rdata"
+saved.workspace.path <- "/home/k/kzaman/TravisImInYourInternets/input-data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata" # "/home/k/kzaman/TravisImInYourInternets/bootstrap-output/saved workspace.Rdata" NEED TO FIX # saved workspace only inputsDF with soil.Rdata
 
-GAMS.projdir <-  "/home/c/cschmidt/TravisImInYourInternets/gamsdir/projdir/"
+if (add.family.labor.to.hired.labor) {
+  GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir/"
+} else {
+  GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir2/"
+}
 
-GAMS.exe.path <- "/home/c/cschmidt/TravisImInYourInternets/gams24.1_linux_x64_64_sfx/gams"
+GAMS.exe.path <- "/home/k/kzaman/TravisImInYourInternets/gams24.7_linux_x64_64_sfx/gams"
 
-code.dir <- "/home/c/cschmidt/TravisImInYourInternets/bootstrap-R-code/"
+code.dir <- "/home/k/kzaman/TravisImInYourInternets/git/coursework/aae-637/paper/"
 
-.libPaths("/home/c/cschmidt/TravisImInYourInternets/Rlib")
+.libPaths("/home/k/kzaman/TravisImInYourInternets/Rlib")
 
 #detach("package:Matrix", unload = TRUE, force=TRUE)
 #detach("package:lattice", unload = TRUE, force=TRUE)
@@ -38,19 +155,20 @@ code.dir <- "/home/c/cschmidt/TravisImInYourInternets/bootstrap-R-code/"
 #unloadNamespace("lattice")
 
 #install.packages("lattice", repos="http://cran.us.r-project.org", 
-#        lib="/home/c/cschmidt/TravisImInYourInternets/Rlib")
+#        lib="/home/k/kzaman/TravisImInYourInternets/Rlib")
 
-library(lattice, lib.loc ="/home/c/cschmidt/TravisImInYourInternets/Rlib")
-
+# library(lattice, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")
+# The above line was there to get around the old version of R that was installed previously
+library(lattice)
 library(Matrix)
 
-  for ( i in c("gdata", "stringr", "systemfit") ) {
-    if(!require(i, character.only=TRUE, lib.loc ="/home/c/cschmidt/TravisImInYourInternets/Rlib")) {
+  for ( i in c("plyr", "gdata", "stringr", "systemfit", "arules") ) {
+    if(!require(i, character.only=TRUE, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")) {
       install.packages(i, repos="http://cran.us.r-project.org", 
-        lib="/home/c/cschmidt/TravisImInYourInternets/Rlib")
-      while(!require(i, character.only=TRUE, lib.loc ="/home/c/cschmidt/TravisImInYourInternets/Rlib")) {
+        lib="/home/k/kzaman/TravisImInYourInternets/Rlib")
+      while(!require(i, character.only=TRUE, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")) {
         Sys.sleep(1)
-  	    require(i, character.only=TRUE, lib.loc ="/home/c/cschmidt/TravisImInYourInternets/Rlib")
+  	    require(i, character.only=TRUE, lib.loc ="/home/k/kzaman/TravisImInYourInternets/Rlib")
   	  }
     }
   }
@@ -62,10 +180,12 @@ library(Matrix)
 
 
 
-load(saved.workspace.path)
+load(saved.workspace.path, verbose = TRUE)
 
 
-target.top.crop.number <- 2
+
+
+
 
 #Papa (patatas)    3155 
 #Maiz combined   1838 
