@@ -1,4 +1,6 @@
 
+# NOTE: Now must set add.family.labor.to.hired.labor  to TRUE or FALSE to run this
+# add.family.labor.to.hired.labor <- FALSE
 
 
 additional.cost <- function(seed.number = 0, target.top.crop.number, regimes.eqn = TRUE, set.params.zero = "NONE", result.filename ) {
@@ -517,11 +519,16 @@ ret.ls
 
 
 
-add.cost.results.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = TRUE, set.params.zero = "NONE",
-result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes/sgmGMEnonlinearRegimesCebada00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
+#add.cost.results.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = TRUE, set.params.zero = "NONE", result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes/sgmGMEnonlinearRegimesCebada00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
 
-add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = FALSE, set.params.zero = "NONE",
-result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes/sgmGMEnonlinearRegimesCebada00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
+#add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = FALSE, set.params.zero = "NONE", result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear/sgmGMEnonlinearCebada00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
+
+
+add.cost.results.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 1, regimes.eqn = TRUE, set.params.zero = "NONE",
+result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes/sgmGMEnonlinearRegimesPapa00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
+
+add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 1, regimes.eqn = FALSE, set.params.zero = "NONE",
+result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear/sgmGMEnonlinearPapa00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
 
 
 
@@ -594,9 +601,10 @@ with(add.cost.results.non.regimes, {
 
 library("stargazer")
 
-results.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/tables/"
+# results.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/tables/"
+results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency Paper/"
 
-test <- with(add.cost.results.regimes, {
+test <- with(add.cost.results.non.regimes, {
   df <- data.frame(distort.cost.input.mat.non.neg = rowSums(distort.cost.input.mat.non.neg), 
                 non.distort.cost.input.mat.non.neg = rowSums(non.distort.cost.input.mat.non.neg))
   df$perc.diff <- 100 * (df$distort.cost.input.mat.non.neg - df$non.distort.cost.input.mat.non.neg) / df$non.distort.cost.input.mat.non.neg
@@ -604,7 +612,7 @@ test <- with(add.cost.results.regimes, {
   
   colnames(df) <- c("Inefficient expenditure", "Efficient expenditure", "Percent difference")
   
-  stargazer(df, summary = TRUE, median = TRUE, out = paste0(results.dir, "distort-cost.tex"),
+  stargazer(df, summary = TRUE, median = TRUE, out = paste0(results.dir, "distort-cost-papa.tex"),
             title = "Excess cost due to allocative inefficiency",
             nobs = FALSE, digits = 2, notes = "The 2008 exchange rate was about 7.4 Bolivianos per USD.")
   
@@ -612,6 +620,14 @@ test <- with(add.cost.results.regimes, {
 })
 
 
+
+# summary statistics for land in each
+summary(add.cost.results.non.regimes$data$q01)
+sum(add.cost.results.non.regimes$data$q01)
+cebada.price.2008 <- 145.2 # in USD / ton # http://www.fao.org/faostat/en/#data/PP
+papa.price.2008 <- 338 # in USD / ton # http://www.fao.org/faostat/en/#data/PP
+summary(add.cost.results.non.regimes$data$y01 * cebada.price.2008 / 1000) # Output is in kg, so convert to tons
+summary(add.cost.results.non.regimes$data$y01 * papa.price.2008 / 1000) # Output is in kg, so convert to tons
 
 
 

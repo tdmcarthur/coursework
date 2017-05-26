@@ -355,8 +355,12 @@ combined.df
 results.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/tables/"
 
 
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)")
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)")
+#boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)")
+#boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)")
+
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)")
+
 
 
 boot.regimes.sd <- apply(boot.regimes.df[, -1], 1, FUN = sd, na.rm = TRUE)
@@ -444,8 +448,11 @@ attr(dfList, "message") <- c(note.1, note.2, note.3)
 
 to.output <- print(xtableList(dfList, caption = "Estimated shadow price parameters"), floating = TRUE, include.rownames = FALSE, sanitize.text.function = identity, caption.placement = "top")
 
+
+results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency Paper/"
+
 cat(gsub("xi", "theta", to.output), 
-      file = paste0(results.dir, "xi.tex"))
+      file = paste0(results.dir, "theta-papa.tex"))
 
 
 
@@ -454,8 +461,14 @@ cat(gsub("xi", "theta", to.output),
 
 
 
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)|(^lambda)")
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)|(^lambda)")
+#boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)|(^lambda)")
+#boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)|(^lambda)")
+
+
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)|(^lambda)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)|(^lambda)")
+
+
 
 
 if (FALSE) {
@@ -464,7 +477,8 @@ regime.key.ls <- list()
 
 for ( seed.number in 0:max(as.numeric( gsub("[^0-9]", "", colnames(boot.regimes.df))), na.rm = TRUE)) {
 # for ( seed.number in 301:500) {
-  combined.df <- boot.dataset(seed.number = seed.number, target.top.crop.number = 3)
+  add.family.labor.to.hired.labor <- FALSE
+  combined.df <- boot.dataset(seed.number = seed.number, target.top.crop.number = 1)
   regime.key.df <- unique(combined.df[, c("posi.vars.regime", "regime.cut")])
   regime.key.df$regime.cut <- paste0("lambda", formatC(regime.key.df$regime.cut, width = 2, flag = "0"))
   colnames(regime.key.df)[2] <- "param"
@@ -473,11 +487,13 @@ for ( seed.number in 0:max(as.numeric( gsub("[^0-9]", "", colnames(boot.regimes.
 }
 
 # save(regime.key.ls, file = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata")
+# save(regime.key.ls, file = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regime-key.Rdata")
 # load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata", verbose = TRUE)
 
 }
 
-load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata", verbose = TRUE)
+#load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata", verbose = TRUE)
+load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regime-key.Rdata", verbose = TRUE) 
 
 regime.params.ls <- list()
 

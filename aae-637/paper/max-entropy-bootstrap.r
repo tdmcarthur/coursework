@@ -7,7 +7,7 @@
 
 add.family.labor.to.hired.labor <- FALSE
 
-target.top.crop.number <- 1
+target.top.crop.number <- 5
 
 #Including zero cost:
 #Potatoes	4,058
