@@ -524,8 +524,10 @@ ret.ls
 #add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = FALSE, set.params.zero = "NONE", result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear/sgmGMEnonlinearCebada00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
 
 
-add.cost.results.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 1, regimes.eqn = TRUE, set.params.zero = "NONE",
-result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes/sgmGMEnonlinearRegimesPapa00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
+#add.cost.results.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 1, regimes.eqn = TRUE, set.params.zero = "NONE",
+#result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes/sgmGMEnonlinearRegimesPapa00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
+
+add.family.labor.to.hired.labor <- FALSE
 
 add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 1, regimes.eqn = FALSE, set.params.zero = "NONE",
 result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear/sgmGMEnonlinearPapa00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")

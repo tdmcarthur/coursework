@@ -106,7 +106,7 @@ for ( target.input in input.price.columns) {
 }
 
 
-impute.mean.or.median <- mean
+impute.mean.or.median <- median
 # Set the imputation of the mean or median here
 
 
@@ -399,6 +399,23 @@ mano.obra.df$paid.hours <- mano.obra.df$x1003.hrs.promedio.x.jornal * (
   mano.obra.df$x991.lab.agricolas...hombre...6mes * 3 * 4.345 * 5 + 
   mano.obra.df$x991.lab.agricolas...mujer...6mes.1 * 3 * 4.345 * 5 )
 
+mano.obra.df$multiplier.for.fam.labor <- with(mano.obra.df,
+                              4.345 * 5 *
+                              x1003.hrs.promedio.x.jornal *
+                              (x991.lab.agricolas...hombre...6mes * 9 +
+                               x991.lab.agricolas...mujer...6mes.1 * 9 +
+                               x991.lab.agricolas...hombre...6mes * 3 +
+                               x991.lab.agricolas...mujer...6mes.1 * 3) /
+                              (x991.lab.agricolas...hombre...6mes +
+                               x991.lab.agricolas...mujer...6mes.1 +
+                               x991.lab.agricolas...hombre...6mes +
+                               x991.lab.agricolas...mujer...6mes.1)
+)
+
+# get the average hours a paid worker puts in,( accounting for # ofmonths)also taking weighted averaghe of # of months), 
+# in order to get an estimate
+# of what a family member would put in. Later impute this quantity.
+
 # Assumption that less than 6 months means 3 months; greater than 6 months means 9 months,
 # and 5 days in a workweek
 # 4.345 weeks in a month according to http://www.convertunits.com/from/weeks/to/months
@@ -427,7 +444,7 @@ mano.obra.df$hourly.tractor.rental <- mano.obra.df$x101.cual.el.costo.de.la.hra.
 
 
 
-input.price.columns <- c("hourly.wage", "hourly.tractor.rental", "paid.hours")
+input.price.columns <- c("hourly.wage", "hourly.tractor.rental", "multiplier.for.fam.labor")
 
 nation.input.averages <- apply(mano.obra.df[, input.price.columns], 2, FUN=function(x) impute.mean.or.median(x[x>0], na.rm=TRUE) )
 nation.input.nobs <- apply(mano.obra.df[, input.price.columns], 2, FUN=function(x) { x <- x[!is.na(x)]; length(x[x>0])} )
@@ -531,7 +548,7 @@ labor.aggregate$ag.fam.labor.equiv[labor.aggregate$ag.fam.labor.equiv == 0] <- 0
 
 mano.obra.df <- merge( mano.obra.df, labor.aggregate, all=TRUE)
 
-mano.obra.df$ag.fam.labor.equiv.hrs <- mano.obra.df$paid.hours * mano.obra.df$ag.fam.labor.equiv
+mano.obra.df$ag.fam.labor.equiv.hrs <- mano.obra.df$multiplier.for.fam.labor * mano.obra.df$ag.fam.labor.equiv
 
 
 

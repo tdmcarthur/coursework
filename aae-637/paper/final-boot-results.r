@@ -13,7 +13,7 @@ get.bootstraps <- function(directory, param.subset.pattern) {
     boot.params.df.temp <- read.csv(bootstrap.files[targ.file], col.names = c("param", "value"), header = FALSE, stringsAsFactors = FALSE)
     names(boot.params.df.temp)[2] <- paste0("value.", gsub("[^0-9]", "", bootstrap.files[targ.file]))
     cat(targ.file, base::date(), "\n")
-    boot.params.df.temp <- boot.params.df.temp[!grepl("(^p)|(^w)", boot.params.df.temp$param), ]
+    boot.params.df.temp <- boot.params.df.temp[!grepl("(^p)|(^w)|(^Smat)", boot.params.df.temp$param), ]
     boot.params.ls[[targ.file]] <- boot.params.df.temp[grepl(param.subset.pattern, boot.params.df.temp$param), ]
   }
 
@@ -352,7 +352,8 @@ combined.df
 }
 
 
-results.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/tables/"
+results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency Paper/"
+# "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/tables/"
 
 
 #boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)")
@@ -455,6 +456,9 @@ cat(gsub("xi", "theta", to.output),
       file = paste0(results.dir, "theta-papa.tex"))
 
 
+for( i in 1:nrow(boot.simple.df)) {
+  hist(t(boot.simple.df[, -1])[, i], breaks = 10)
+}
 
 
 
@@ -476,7 +480,7 @@ if (FALSE) {
 regime.key.ls <- list()
 
 for ( seed.number in 0:max(as.numeric( gsub("[^0-9]", "", colnames(boot.regimes.df))), na.rm = TRUE)) {
-# for ( seed.number in 301:500) {
+# for ( seed.number in 80:200) {
   add.family.labor.to.hired.labor <- FALSE
   combined.df <- boot.dataset(seed.number = seed.number, target.top.crop.number = 1)
   regime.key.df <- unique(combined.df[, c("posi.vars.regime", "regime.cut")])
@@ -530,12 +534,26 @@ theta <- regime.params.df[, 2]
 chi.sq.stat.lambda <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["chi2"]
 p.val.lambda <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
+chi.sq.stat.lambda
+p.val.lambda
+
 #chi.sq.stat <- t(R[1:2, 1:2] %*% theta[1:2] - r[1:2]) %*% solve(R[1:2, 1:2] %*% (boot.cov[1:2, 1:2]) %*% t(R[1:2, 1:2])) %*% (R[1:2, 1:2] %*% theta[1:2] - r[1:2])
 
 
 
 # boot.regimes.all.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "06")
-boot.regimes.all.df <- boot.regimes.all.df.save <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "")
+crop.dirs <- c(
+  "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear",
+  "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear" # regimes
+)
+
+
+tech.params.ls <- list()
+
+for (targ.crop.dir in crop.dirs) {
+
+
+boot.regimes.all.df <- boot.regimes.all.df.save <- get.bootstraps(targ.crop.dir, "")
 boot.regimes.all.df <- boot.regimes.all.df[!grepl("(xi)|(lambda)", boot.regimes.all.df$param), ]
 # "(R)|(lambda)"
 # "(R)|(lambda)|(b)|(s)"
@@ -549,23 +567,42 @@ tech.params.df  <- data.frame(boot.regimes.all.df[, 1], boot.regimes.all.df[, 2]
 
 names(tech.params.df) <- c("Parameter", "Estimate", "SE", "t-stat") 
 
+tech.params.ls[[targ.crop.dir]] <- tech.params.df
+
+}
+
+# do.call(cbind, tech.params.ls)
+# This above doesnt work
+tech.params.df.final <- cbind(tech.params.ls[[1]], tech.params.ls[[2]][, -1])
+
 
 # Thanks to https://stackoverflow.com/questions/6163823/r-xtable-caption-or-comment
-dfList <- list(tech.params.df)
+dfList <- list(tech.params.df.final)
 #attr(dfList, "message") <- c("A caption", "Which can have multiple lines")
 #attr(dfList, "message") <- c(note.1, note.2, note.3)
 
-cat(print(xtableList(dfList, digits = 3, display = rep("g", 1 + ncol(tech.params.df)), 
+
+attr(dfList, "message") <- c(
+  "See equation 1 for the model specification. Price $w_{i}$ are 1 = inorganic fertilizer in Bolivianos/kg; ",
+  "2 = purchased seed in Bs/kg; 3 = tractor Bs/hours; 4 = plaguicidas Bs/kg; 5 = hired labor Bs/hours; ",
+  "6 = organic fertilizer Bs/kg. Fixed inputs $q_{i}$ are 1 = hectares cultivated; 2 = has irrigation; ",
+  "3 = family labor hours; 4 = soil quality; 6 = elevation in km; 5 = precipitation in cm/season."
+)
+
+
+
+tech.params.output <- print(xtableList(dfList, digits = 3, display = rep("g", 1 + ncol(tech.params.df.final)), 
                      caption = "Technological parameters of cost function"), include.rownames = FALSE,
-          sanitize.text.function = identity, tabular.environment = "longtable", floating = FALSE, caption.placement = "top"), 
-      file = paste0(results.dir, "tech-params.tex"))
+          sanitize.text.function = identity, tabular.environment = "longtable", floating = FALSE, caption.placement = "top")
+
+tech.params.output <- strsplit(tech.params.output, "\n" )[[1]]
+tech.params.output <- c(tech.params.output[1:5], 
+                        "\\multicolumn{1}{c}{} & \\multicolumn{3}{c}{Barley} & \\multicolumn{3}{c}{Potatoes} \\\\",
+                        "\\hline",
+                        tech.params.output[6:length(tech.params.output)])
 
 
-
-
-
-
-
+cat( tech.params.output,  file = paste0(results.dir, "tech-params.tex"), sep ="\n")
 
 
 
