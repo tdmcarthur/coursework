@@ -1,5 +1,8 @@
 library("foreign")
 
+impute.mean.or.median <- mean
+# Set the imputation of the mean or median here
+
 work.dir <- "/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/"
 
 inputs.df<- read.spss(paste0(work.dir, "bd68/2-AGRICOLA/Cultivos (Preg-19)/2.-ENA08_BOLIVIA_CULTIVOS_PRODUCCION_INSUMOS(preg_19).sav"), to.data.frame=TRUE)
@@ -106,8 +109,7 @@ for ( target.input in input.price.columns) {
 }
 
 
-impute.mean.or.median <- median
-# Set the imputation of the mean or median here
+
 
 
 input.price.columns <- c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abono.bs.kg", "x19.plagicidas.bs.kg")
@@ -411,6 +413,8 @@ mano.obra.df$multiplier.for.fam.labor <- with(mano.obra.df,
                                x991.lab.agricolas...hombre...6mes +
                                x991.lab.agricolas...mujer...6mes.1)
 )
+
+mano.obra.df$multiplier.for.fam.labor[!is.finite(mano.obra.df$multiplier.for.fam.labor)] <- 0
 
 # get the average hours a paid worker puts in,( accounting for # ofmonths)also taking weighted averaghe of # of months), 
 # in order to get an estimate
@@ -2062,6 +2066,8 @@ inputs.df$mean.ann.rain.5yr[is.na(inputs.df$mean.ann.rain.5yr)] <- mean.rainfall
 
 
 save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata")
+
+# save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/Rdata results files/saved workspace only inputsDF with soil and rain and no drive time and with median imputation.Rdata")
 
 
 # rm(list=setdiff(ls(), keep.these))

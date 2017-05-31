@@ -63,8 +63,9 @@ if (!synthetic.data) {
 #  start.nonlin.from.ignorance <- TRUE
   global.max.seed <- 4
   do.SUR <- FALSE
-  include.cost.fn <- FALSE
-  only.cost.fn <- FALSE
+  include.cost.fn <- TRUE
+  # Below: CRUCIAL for NLS
+  only.cost.fn <- TRUE
   generate.synth.data.from.cost.fn <- FALSE
   start.at.true.xi <- FALSE
 }

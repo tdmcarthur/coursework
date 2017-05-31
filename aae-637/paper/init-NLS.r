@@ -7,7 +7,7 @@
 
 add.family.labor.to.hired.labor <- FALSE
 
-target.top.crop.number <- 3
+target.top.crop.number <- 1
 
 #Including zero cost:
 #Potatoes	4,058
@@ -62,7 +62,8 @@ if (!synthetic.data) {
   global.max.seed <- 4
   do.SUR <- FALSE
   include.cost.fn <- TRUE
-  only.cost.fn <- FALSE
+  # Below: CRUCIAL for NLS
+  only.cost.fn <- TRUE
   generate.synth.data.from.cost.fn <- FALSE
   start.at.true.xi <- FALSE
 }
@@ -135,15 +136,12 @@ code.dir <- "/Users/travismcarthur/git/coursework/aae-637/paper/"
 
 if (Sys.info()['sysname']=="Linux") {
 
-# saved.workspace.path <- "/home/k/kzaman/TravisImInYourInternets/input-data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata" # "/home/k/kzaman/TravisImInYourInternets/bootstrap-output/saved workspace.Rdata" NEED TO FIX # saved workspace only inputsDF with soil.Rdata
-  
-saved.workspace.path <- "/home/k/kzaman/TravisImInYourInternets/input-data/saved workspace only inputsDF with soil and rain and no drive time and with median imputation.Rdata"
+saved.workspace.path <- "/home/k/kzaman/TravisImInYourInternets/input-data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata" # "/home/k/kzaman/TravisImInYourInternets/bootstrap-output/saved workspace.Rdata" NEED TO FIX # saved workspace only inputsDF with soil.Rdata
 
 if (add.family.labor.to.hired.labor) {
   GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir/"
 } else {
-  #GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir2/"
-  GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir3/"
+  GAMS.projdir <-  "/home/k/kzaman/TravisImInYourInternets/gamsdir/projdir2/"
 }
 
 GAMS.exe.path <- "/home/k/kzaman/TravisImInYourInternets/gams24.7_linux_x64_64_sfx/gams"
@@ -360,197 +358,31 @@ if (only.cost.fn) {
 }
 
 
+source(paste0(code.dir, "sgm-GAMS-NLS-linear-construction.r"))
 
 
-if (functional.form =="TRANSLOG") {
-  source(paste0(code.dir, "GAMS-linear-construction.r"))
-}
-
-if (functional.form =="SGM" & !start.nonlin.from.ignorance) {
-  source(paste0(code.dir, "sgm-GAMS-linear-construction.r"))
-}
-
-
-
-# system(paste0("cd ", GAMS.projdir, "\n", "ls" ) )
-
-if (functional.form =="TRANSLOG") {
-run.linear.from.shell <-paste0("cd ", GAMS.projdir, "\n", 
+run.NLS.from.shell <- paste0("cd ", GAMS.projdir, "\n", 
    GAMS.exe.path, " ", 
-   "GMElinear", strsplit(target.crop, " ")[[1]][1], 
+   "sgmNLSlinear", strsplit(target.crop, " ")[[1]][1], 
    formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor , ".gms", 
    " Ps=0 suppress=1")
-}
-
-if (functional.form =="SGM") {
-run.linear.from.shell <-paste0("cd ", GAMS.projdir, "\n", 
-   GAMS.exe.path, " ", 
-   "sgmGMElinear", strsplit(target.crop, " ")[[1]][1], 
-   formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor , ".gms", 
-   " Ps=0 suppress=1")
-}
-
-if (!start.nonlin.from.ignorance) {
-  system(run.linear.from.shell)
-}
-#stop("END!")
-# next
-
-# elapsed 0:08:19.548
-# elapsed 0:08:26.802
 
 
-theta.param.support <- qlnorm(seq(.1, .999, length.out=13), meanlog= 0, sdlog = 1.5)
-theta.param.support <- theta.param.support/mean(theta.param.support)
-xi.param.support <- theta.param.support
-#xi.param.support <- c(-8, 1, 10)
-# NOTE: Changing support dratically
+#cat(completed.GAMS.file, file = paste0(GAMS.projdir, "NLS-TEST.gms"), sep = "\n")
 
-# plot(c(0,13), c(0,13))
-# rug(theta.param.support, col="red")
 
-if (functional.form =="TRANSLOG") {
-  source(paste0(code.dir, "GAMS-nonlinear-construction.r"))
-}
+system(run.NLS.from.shell)
 
-if (functional.form =="TRANSLOG") {
+source(paste0(code.dir, "sgm-GAMS-NLS-nonlinear-construction.r"))
+
 run.nonlinear.from.shell <-paste0("cd ", GAMS.projdir, "\n", 
    GAMS.exe.path, " ", 
-   "GMEnonlinear", strsplit(target.crop, " ")[[1]][1], 
+   "sgmNLSnonlinear", strsplit(target.crop, " ")[[1]][1], 
    formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor , ".gms", 
    " Ps=0 suppress=1")
-}
-
-
-# In fact, we need the linear construction file to be created
-# even if we "start nonlinear from ignorance"
-# since the nonlinear relies on it for the var names.
-# Can just run it a few secs and stop.
-
-if (functional.form =="SGM") {
-  source(paste0(code.dir, "sgm-GAMS-nonlinear-construction.r"))
-}
-
-if (functional.form =="SGM") {
-run.nonlinear.from.shell <-paste0("cd ", GAMS.projdir, "\n", 
-   GAMS.exe.path, " ", 
-   "sgmGMEnonlinear", strsplit(target.crop, " ")[[1]][1], 
-   formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor , ".gms", 
-   " Ps=0 suppress=1")
-}
-
-
 
 
 system(run.nonlinear.from.shell)
-
-do.regimes <- TRUE
-
-
-if ( do.regimes) {
-  
-  cat("The value of J is", J, "\n")
-
-  n.regime.groups <- 6
-  
-  # This point right below here relies on there being on 
-  # prep-for-sgm-GAMS-regimes-construction.r not having been run
-  # Maybe want   source(paste0(code.dir, "build-model-extract-parcels.r"))   here
-  
-  # source(paste0(code.dir, "regimes-cluster-calc.r"))
-  
-  source(paste0(code.dir, "regimes-full-power-set.r"))
-  
-  # source(paste0(code.dir, "GAMS-multinomial-logit-construction.r"))
-  mle.GAMS.output <- TRUE
-  source(paste0(code.dir, "GAMS-multinomial-logit-construction-all-regimes.r"))
-  
-  
-  run.multinom.logit.from.shell <-paste0("cd ", GAMS.projdir, "\n", 
-    GAMS.exe.path, " ", 
-    "MLEmultinomiallogit", strsplit(target.crop, " ")[[1]][1], 
-    formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor , ".gms", 
-    " Ps=0 suppress=1")
-
-  system(run.multinom.logit.from.shell)
-  
-  
-  set.exp.correction.as.q07 <- TRUE
-  normalize.cond.exp.coefs <- TRUE
-  
-  cat("The value of J is", J, "\n")
-  # NOTE: A major thing that occurs with this file below is we get
-  # J <- J + 1
-  # which is used in every other operation below
-  linear.GAMS.output <- FALSE
-  source(paste0(code.dir, "prep-for-sgm-GAMS-regimes-construction.r"))
-  
-  cat("The value of J is", J, "\n")
-  
-  # This below is to re-construct the nonlinear equations with the last q0[0-9] ready to be replaced
-  # by the conditional expectation correction
-  non.linear.GAMS.output <- FALSE
-  source(paste0(code.dir, "sgm-linear-sur-building.r"), local = local.source.evaluation) 
-  source(paste0(code.dir, "sgm-GAMS-linear-construction.r"))
-  source(paste0(code.dir, "sgm-GAMS-nonlinear-construction.r"))
-  
-   start.nonlin.regimes.from.ignorance <- FALSE
-  #start.nonlin.regimes.from.ignorance <- TRUE
-  # global.max.seed <- 0
-   het.tech <- FALSE
-   
-   cat("The value of J is", J, "\n")
-  
-  source(paste0(code.dir, "sgm-GAMS-regimes-construction.r"))
-  
-
-  run.nonlinear.regimes.from.shell <-paste0("cd ", GAMS.projdir, "\n", 
-     GAMS.exe.path, " ", 
-     "sgmGMEnonlinearRegimes", strsplit(target.crop, " ")[[1]][1], 
-     formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor , ".gms", 
-     " Ps=0 suppress=1")
-
-  system(run.nonlinear.regimes.from.shell)
-  
-  # options decimals = 7;
-  # ----  28655 VARIABLE byyalt1.L             =    0.0000001  parameters to be estimated
-
-
-
-}
-
-
-
-
-#time.counter <- c(time.counter, Sys.time())
-#save(time.counter, file=paste0(GAMS.projdir, strsplit(target.crop, " ")[[1]][1], 
-#  "bootstrapcounter.Rdata"))
-
-
-#}
-
-
-# }
-
-
-
-
-
-# source("/Users/travismcarthur/git/coursework/aae-637/paper/max-entropy-postestimation.r")
-
-# old: rvhess = 100
-# old: rvstlm = 1.1
-
-# Old-ish: lfmxns = 20000
-# Old-ish: lfnicr = 10000
-# Old-ish: lfstal = 10000
-
-
-
-#load("/Users/travismcarthur/Desktop/gamsdir/projdir/Trigobootstrapcounter.Rdata")
-#diff(time.counter)
-#hist(diff(time.counter))
-
 
 
 

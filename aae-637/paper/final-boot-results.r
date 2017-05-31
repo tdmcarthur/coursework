@@ -359,8 +359,11 @@ results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency 
 #boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)")
 #boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)")
 
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)")
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)")
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)")
+
+# boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)")
+# boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)")
 
 
 
@@ -453,7 +456,7 @@ to.output <- print(xtableList(dfList, caption = "Estimated shadow price paramete
 results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency Paper/"
 
 cat(gsub("xi", "theta", to.output), 
-      file = paste0(results.dir, "theta-papa.tex"))
+      file = paste0(results.dir, "theta-cebada.tex"))
 
 
 for( i in 1:nrow(boot.simple.df)) {
@@ -465,8 +468,8 @@ for( i in 1:nrow(boot.simple.df)) {
 
 
 
-#boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)|(^lambda)")
-#boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)|(^lambda)")
+#boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)|(^lambda)")
+#boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)|(^lambda)")
 
 
 boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)|(^lambda)")
@@ -583,7 +586,7 @@ dfList <- list(tech.params.df.final)
 
 
 attr(dfList, "message") <- c(
-  "See equation 1 for the model specification. Price $w_{i}$ are 1 = inorganic fertilizer in Bolivianos/kg; ",
+  "See equation 2 for the model specification. Price $w_{i}$ are 1 = inorganic fertilizer in Bolivianos/kg; ",
   "2 = purchased seed in Bs/kg; 3 = tractor Bs/hours; 4 = plaguicidas Bs/kg; 5 = hired labor Bs/hours; ",
   "6 = organic fertilizer Bs/kg. Fixed inputs $q_{i}$ are 1 = hectares cultivated; 2 = has irrigation; ",
   "3 = family labor hours; 4 = soil quality; 6 = elevation in km; 5 = precipitation in cm/season."
