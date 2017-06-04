@@ -428,7 +428,7 @@ run.nonlinear.from.shell <-paste0("cd ", GAMS.projdir, "\n",
 # Can just run it a few secs and stop.
 
 if (functional.form =="SGM") {
-  catch.nonlin.build.error <- tryCatch(source(paste0(code.dir, "sgm-GAMS-nonlinear-construction.r"), error = function(x) "next") )
+  catch.nonlin.build.error <- tryCatch(source(paste0(code.dir, "sgm-GAMS-nonlinear-construction.r")), error = function(x) "next") 
 }
 
 if (catch.nonlin.build.error == "next") {

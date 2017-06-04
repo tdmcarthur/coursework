@@ -376,6 +376,24 @@ boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc pa
 # boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada NLS fam not fixed", "(^xi)")
 
 
+for( i in 1:nrow(boot.simple.df)) {
+  hist(t(boot.simple.df[, -1])[, i], breaks = 10)
+}
+
+
+
+for( i in 1:nrow(boot.simple.df)) {
+  print(summary(t(boot.simple.df[, -1])[, i]))
+}
+
+
+for( i in 1:nrow(boot.simple.df)) {
+  hist(t(boot.simple.df[, -1])[  t(boot.simple.df[, -1])[, i] <= 50   , i], breaks = 10)
+}
+
+
+
+
 # boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)")
 # boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)")
 
@@ -605,6 +623,8 @@ table(sapply(regime.params.df[, -1], FUN = function(x) sum(is.na(x))) )
 # See how many missing lambdas we have
 
 eigen(boot.cov)$value
+
+# IDEA: Jitter the orig paras to make var-cov it a PSD matrix for cebada
 
 # Previously, we have not-positive-semi-definite var-cov matrix due to use = "pairwise.complete.obs". 
 # This fix will make things more likely to reject, I think, but will exclude some lambdas, I think.
