@@ -359,11 +359,19 @@ results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency 
 #boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "(^xi)")
 #boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/simple nonlinear", "(^xi)")
 
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)")
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)")
+#boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)")
+#boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)")
 
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)")
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)")
+#boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)")
+#boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)")
+
+
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/regimes", "(^xi)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/simple nonlinear", "(^xi)")
+
+#/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/regimes/sgmGMEnonlinearRegimesCebada00000mean-impute-finally-correct-param-output.txt
+
+
 
 # boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada NLS fam not fixed", "(^xi)")
 
@@ -401,7 +409,9 @@ colnames(xi.params.display.df) <- c("Parameter", "No selection correction", "SE"
 xi.params.display.df$Parameter <- paste0("$\\", gsub("xi", "xi_{", xi.params.display.df$Parameter), "}$")
 
 
-boot.cov <- cov(t(boot.simple.df[, -1]), use = "pairwise.complete.obs")
+boot.cov <- cov(t(boot.simple.df[, -1]), use = "complete.obs")
+
+cov2cor(boot.cov)
 
 R <- diag(1, 5)
 r <- matrix(1, nrow = nrow(R))
@@ -412,7 +422,48 @@ p.val <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 chi.sq.stat.simple <- chi.sq.stat
 p.val.simple <- p.val
 
-boot.cov <- cov(t(boot.regimes.df[, -1]), use = "pairwise.complete.obs")
+
+
+
+
+theta.xi.06 <- c(theta, 1)
+boot.cov.xi.06 <- boot.cov
+boot.cov.xi.06 <- rbind(boot.cov.xi.06, 0)
+boot.cov.xi.06 <- cbind(boot.cov.xi.06, 0)
+# Ok so it's easy enough to add the last row and col
+
+p.val.mat <- matrix(NA, ncol = nrow(boot.cov.xi.06), nrow = nrow(boot.cov.xi.06))
+
+
+for (i in 1:(nrow(boot.cov.xi.06)) ) {
+  for ( j in 1:(nrow(boot.cov.xi.06))) {
+    if (i == j | i < j) { next } # | i > j
+    
+    R <- matrix(0, nrow = 1, ncol = nrow(boot.cov.xi.06))
+    R[1, i] <- 1
+    R[1, j] <- (-1)
+    # print(R %*% theta.xi.06)
+    r <- matrix(0, nrow = 1)
+    chi.sq.stat <- aod::wald.test(Sigma = boot.cov.xi.06, b = theta.xi.06, L = R)$result$chi2["chi2"]
+    p.val <- aod::wald.test(Sigma = boot.cov.xi.06, b = theta.xi.06, L = R)$result$chi2["P"]
+    p.val.mat[i, j] <- p.val
+    
+  }
+}
+
+p.val.mat
+t(t(theta.xi.06 ))
+
+
+
+
+
+
+
+
+
+boot.cov <- cov(t(boot.regimes.df[, -1]), use = "complete.obs")
+cov2cor(boot.cov)
 
 R <- diag(1, 5)
 r <- matrix(1, nrow = nrow(R))
@@ -425,7 +476,12 @@ p.val.regimes <- p.val
 
 min.num.boots <- min(c(ncol(boot.simple.df), ncol(boot.regimes.df)))
 boot.cov <- cov(t(rbind(boot.simple.df[, 2:min.num.boots], 
-                        boot.regimes.df[, 2:min.num.boots])), use = "pairwise.complete.obs")
+                        boot.regimes.df[, 2:min.num.boots])), use = "complete.obs")
+
+# Ok how is this possible not positive definite? - aha I think this was due to use = "pairwise.complete.obs" in cov(). Now fixed
+library("matrixcalc")
+is.positive.semi.definite(boot.cov)
+eigen(boot.cov)
 
 
 R <- t(rbind(diag(1, 5), (-1) * diag(1, 5)))
@@ -474,12 +530,24 @@ for( i in 1:nrow(boot.simple.df)) {
 
 
 
+
+
+
+
+
+
+
+
+
 #boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)|(^lambda)")
 #boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)|(^lambda)")
 
 
 boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)|(^lambda)")
 boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)|(^lambda)")
+
+regime.key.file <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regime-key.Rdata"
+"/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata"
 
 
 
@@ -505,8 +573,8 @@ for ( seed.number in 0:max(as.numeric( gsub("[^0-9]", "", colnames(boot.regimes.
 
 }
 
-#load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata", verbose = TRUE)
-load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regime-key.Rdata", verbose = TRUE) 
+load(regime.key.file, verbose = TRUE)
+#load("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regime-key.Rdata", verbose = TRUE) 
 
 regime.params.ls <- list()
 
@@ -521,6 +589,8 @@ for (i in 0:(ncol(boot.regimes.df) - 2)) {
 
 regime.params.df <- regime.params.ls[[1]]
 
+
+
 for (i in 2:length(regime.params.ls)) {
   regime.params.df <- merge(regime.params.df, regime.params.ls[[i]], all = TRUE)
 }
@@ -528,7 +598,16 @@ for (i in 2:length(regime.params.ls)) {
 apply(regime.params.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
 
 
-boot.cov <- cov(t(regime.params.df[, -1]), use = "pairwise.complete.obs")
+boot.cov <- cov(t(regime.params.df[, -1]), use = "complete.obs")
+
+
+table(sapply(regime.params.df[, -1], FUN = function(x) sum(is.na(x))) )
+# See how many missing lambdas we have
+
+eigen(boot.cov)$value
+
+# Previously, we have not-positive-semi-definite var-cov matrix due to use = "pairwise.complete.obs". 
+# This fix will make things more likely to reject, I think, but will exclude some lambdas, I think.
 
 #R <- matrix(0, nrow = nrow(boot.cov), ncol = nrow(boot.cov) - 1)
 #for ( i in 1:(nrow(R) - 1)) {
@@ -568,7 +647,7 @@ boot.regimes.all.df <- boot.regimes.all.df[!grepl("(xi)|(lambda)", boot.regimes.
 # "(R)|(lambda)|(b)|(s)"
 
 
-boot.cov <- cov(t(boot.regimes.all.df[, -1]), use = "pairwise.complete.obs")
+boot.cov <- cov(t(boot.regimes.all.df[, -1]), use = "complete.obs")
 
 tech.params.df  <- data.frame(boot.regimes.all.df[, 1], round(boot.regimes.all.df[, 2], 2), round(boot.regimes.all.df[, 2] / sqrt(diag(boot.cov)), 2))
 

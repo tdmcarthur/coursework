@@ -120,7 +120,10 @@ dropped.cost.share.eq <- 10
 # saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
 
 # saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with median imputation.Rdata"
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation - data used for dissertation defense.Rdata"
+
+#saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation - data used for dissertation defense.Rdata"
+
+saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with median imputation.Rdata"
 
 
 
@@ -275,7 +278,7 @@ time.counter <- c()
 # bootstrap.iter <- 0
 
 
-file.flavor <- "mean-impute-finally-correct"
+file.flavor <- "median-impute-finally-correct-fam-labor-fixed"
 
 
 
