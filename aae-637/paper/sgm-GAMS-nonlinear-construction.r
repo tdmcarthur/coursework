@@ -1596,5 +1596,6 @@ cat(completed.GAMS.file,
 }
 # rvhess = maxdouble
 
+NULL
 
 
