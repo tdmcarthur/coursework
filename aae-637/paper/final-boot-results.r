@@ -362,6 +362,12 @@ results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency 
 boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)")
 boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)")
 
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/regimes", "(^xi)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)")
+
+# boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada NLS fam not fixed", "(^xi)")
+
+
 # boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)")
 # boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)")
 

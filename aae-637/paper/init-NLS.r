@@ -4,10 +4,11 @@
 ## source("/Users/travismcarthur/git/coursework/aae-637/paper/initial-data-setup.r")
 ## source("/Users/travismcarthur/git/coursework/aae-637/paper/max-entropy-bootstrap.r")
 ## source("/Users/travismcarthur/git/coursework/aae-637/paper/gme-control-code.r")
+## source("/Users/travismcarthur/git/coursework/aae-637/paper/init-NLS.r")
 
 add.family.labor.to.hired.labor <- FALSE
 
-target.top.crop.number <- 1
+target.top.crop.number <- 3
 
 #Including zero cost:
 #Potatoes	4,058
@@ -118,7 +119,9 @@ dropped.cost.share.eq <- 10
 
 # saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation.Rdata"
 
-saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with median imputation.Rdata"
+# saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with median imputation.Rdata"
+saved.workspace.path <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Data/saved workspace only inputsDF with soil and rain and no drive time and with mean imputation - data used for dissertation defense.Rdata"
+
 
 
 # GAMS.projdir <-  "/Users/travismcarthur/Desktop/gamsdir/projdir2/"
@@ -370,8 +373,9 @@ run.NLS.from.shell <- paste0("cd ", GAMS.projdir, "\n",
 
 #cat(completed.GAMS.file, file = paste0(GAMS.projdir, "NLS-TEST.gms"), sep = "\n")
 
-
 system(run.NLS.from.shell)
+
+
 
 source(paste0(code.dir, "sgm-GAMS-NLS-nonlinear-construction.r"))
 

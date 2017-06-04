@@ -691,7 +691,7 @@ resid.starting.vals.lines,
 "*options seed=5;",
 "*options iterlim=0;",
 "*option bratio=1;",
-"options iterlim=90000;",
+"options iterlim=90000;", # "options iterlim=2;",
 "options reslim=470000;",
 "*options work=900000;",
 "* conopt optimizer option is below",
@@ -733,6 +733,25 @@ if (!concave.in.prices) {
 }
 
 
+gdx.output.file <- paste0("NLS", strsplit(target.crop, " ")[[1]][1], 
+     formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor  , "-param-output.txt") 
+
+
+
+gdx.like.output.lines <- c(
+paste0("file output /", gdx.output.file, "/;"),
+"output.nr = 2  ; /* 'rounding option' used to force e format */",
+"output.nd = 15 ; /* or larger */ ",
+"output.nw = 0  ; /* width as required */ ",
+"put output;" ,
+paste0("put \"", gsub(" ", "", unlist(all.params)), ",\" ", 
+  gsub(" ", "", unlist(all.params)), ".l /;"),
+  paste0("put \"residual,\",", " residual.l(\"", 1:nrow(combined.df), "\") /;"),
+"putclose;"
+)
+
+
+
 completed.GAMS.file <-  c(
   top.before.data, " ", 
   combined.df.GAMS, " ", 
@@ -757,7 +776,8 @@ completed.GAMS.file <-  c(
 #  errorrelaxrestrict.defn, " ",
   covar.SUR.lines,
   final.lines, " ",
-  parameter.display.lines 
+  parameter.display.lines, " ",
+  gdx.like.output.lines 
 )
 
 

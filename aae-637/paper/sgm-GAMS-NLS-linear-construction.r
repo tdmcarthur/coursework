@@ -483,6 +483,27 @@ if (!concave.in.prices) {
 param.initial.values <- paste0(all.params, ".L", " = 0;")
 
 
+
+
+gdx.output.file <- paste0("NLS-linear-", strsplit(target.crop, " ")[[1]][1], 
+     formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor  , "-param-output.txt") 
+
+
+
+gdx.like.output.lines <- c(
+paste0("file output /", gdx.output.file, "/;"),
+"output.nr = 2  ; /* 'rounding option' used to force e format */",
+"output.nd = 15 ; /* or larger */ ",
+"output.nw = 0  ; /* width as required */ ",
+"put output;" ,
+paste0("put \"", gsub(" ", "", unlist(all.params)), ",\" ", 
+  gsub(" ", "", unlist(all.params)), ".l /;"),
+  paste0("put \"residual,\",", " residual.l(\"", 1:nrow(combined.df), "\") /;"),
+"putclose;"
+)
+
+
+
 final.lines <- 
 c(
 "*Initial conditions",
@@ -564,7 +585,8 @@ completed.GAMS.file <-  c(
 #  errorrelaxrestrict.defn, " ",
   covar.SUR.lines,
   final.lines, " ",
-  parameter.display.lines 
+  parameter.display.lines ,
+  gdx.like.output.lines
 )
 
 
