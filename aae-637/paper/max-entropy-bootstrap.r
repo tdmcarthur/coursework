@@ -1,4 +1,4 @@
-
+for (top.control.bootstrap.iter in 1:100) {
 # 
 
 ## source("/Users/travismcarthur/git/coursework/aae-637/paper/initial-data-setup.r")
@@ -557,5 +557,5 @@ if ( do.regimes) {
 #hist(diff(time.counter))
 
 
-
+}
 

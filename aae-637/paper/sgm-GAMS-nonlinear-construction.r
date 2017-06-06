@@ -833,6 +833,14 @@ for ( i in 1:length(all.eqns) ) {
   err.weight.temp.df <- read.table( paste0(GAMS.projdir, "sgmGMElinear", strsplit(target.crop, " ")[[1]][1], 
    formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor ,  ".lst"), 
     skip = begin.err.weight[i] + 3,  nrows= nrow(combined.df))
+  
+#    err.weight.temp.df <- read.fwf( paste0(GAMS.projdir, "sgmGMElinear", strsplit(target.crop, " ")[[1]][1], 
+#   formatC(bootstrap.iter, width = 5, flag = "0"), file.flavor ,  ".lst"), 
+#   widths = c(7, 12, 12, 12),
+#    skip = begin.err.weight[i] + 3,  n = nrow(combined.df),
+#   colClasses = c(NULL, rep("numeric", 3)))
+  
+  
 
   err.weight.temp.df <- err.weight.temp.df[, -1 ]
   
