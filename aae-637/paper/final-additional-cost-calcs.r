@@ -530,8 +530,8 @@ ret.ls
 add.family.labor.to.hired.labor <- FALSE
 
 add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 1, regimes.eqn = FALSE, set.params.zero = "NONE",
-result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear/sgmGMEnonlinearPapa00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt")
-
+result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa fam labor fixed actual/simple nonlinear/sgmGMEnonlinearPapa00000mean-impute-finally-correct-param-output.txt")
+# "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear/sgmGMEnonlinearPapa00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt"
 
 
 table(rowSums(add.cost.results.regimes$distort.cost.input.mat) > 
@@ -614,7 +614,7 @@ test <- with(add.cost.results.non.regimes, {
   
   colnames(df) <- c("Inefficient expenditure", "Efficient expenditure", "Percent difference")
   
-  stargazer(df, summary = TRUE, median = TRUE, out = paste0(results.dir, "distort-cost-papa.tex"),
+  stargazer(df, summary = TRUE, median = TRUE, out = paste0(results.dir, "distort-cost-cebada.tex"),
             title = "Excess cost due to allocative inefficiency",
             nobs = FALSE, digits = 2, notes = "The 2008 exchange rate was about 7.4 Bolivianos per USD.")
   

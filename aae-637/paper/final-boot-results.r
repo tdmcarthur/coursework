@@ -366,8 +366,8 @@ results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency 
 #boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)")
 
 
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/regimes", "(^xi)")
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/simple nonlinear", "(^xi)")
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa fam labor fixed actual/regimes", "(^xi)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa fam labor fixed actual/simple nonlinear", "(^xi)")
 
 #/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/regimes/sgmGMEnonlinearRegimesCebada00000mean-impute-finally-correct-param-output.txt
 
@@ -536,7 +536,7 @@ to.output <- print(xtableList(dfList, caption = "Estimated shadow price paramete
 results.dir <- "/Users/travismcarthur/git/private/Bolivia Allocative Efficiency Paper/"
 
 cat(gsub("xi", "theta", to.output), 
-      file = paste0(results.dir, "theta-cebada.tex"))
+      file = paste0(results.dir, "theta-papa.tex"))
 
 
 for( i in 1:nrow(boot.simple.df)) {
@@ -562,10 +562,11 @@ for( i in 1:nrow(boot.simple.df)) {
 
 
 boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)|(^lambda)")
+# "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes"
 boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)|(^lambda)")
 
 regime.key.file <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regime-key.Rdata"
-"/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata"
+"/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap/regime-key.Rdata"
 
 
 
@@ -651,8 +652,8 @@ p.val.lambda
 
 # boot.regimes.all.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regimes", "06")
 crop.dirs <- c(
-  "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear",
-  "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear" # regimes
+  "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/simple nonlinear",
+  "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa fam labor fixed actual/simple nonlinear" # regimes
 )
 
 
