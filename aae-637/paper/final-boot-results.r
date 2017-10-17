@@ -561,12 +561,25 @@ for( i in 1:nrow(boot.simple.df)) {
 #boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed/simple nonlinear", "(^xi)|(^lambda)")
 
 
-boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes", "(^xi)|(^lambda)")
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa fam labor fixed actual/regimes", "(^xi)|(^lambda)")
 # "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes"
-boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear", "(^xi)|(^lambda)")
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa fam labor fixed actual/simple nonlinear", "(^xi)|(^lambda)")
 
 regime.key.file <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regime-key.Rdata"
 "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap/regime-key.Rdata"
+
+
+
+
+# CEBADA:
+
+boot.regimes.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/regimes", "(^xi)|(^lambda)")
+# "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/regimes"
+boot.simple.df <- get.bootstraps("/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/simple nonlinear", "(^xi)|(^lambda)")
+
+regime.key.file <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada bootstrap/regime-key.Rdata"
+
+
 
 
 
@@ -617,7 +630,8 @@ for (i in 2:length(regime.params.ls)) {
 apply(regime.params.df[, -1], 1, FUN = quantile, probs = c(0.05, 0.95), na.rm = TRUE)
 
 
-boot.cov <- cov(t(regime.params.df[, -1]), use = "complete.obs")
+boot.cov <- cov(t(regime.params.df[, -1]), use = "pairwise.complete.obs") #  "complete.obs")
+# Had to do pairwise complete for low-bootstrap iterations cases
 
 
 table(sapply(regime.params.df[, -1], FUN = function(x) sum(is.na(x))) )
@@ -644,6 +658,7 @@ chi.sq.stat.lambda <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$
 p.val.lambda <- aod::wald.test(Sigma = boot.cov, b = theta, L = R)$result$chi2["P"]
 
 chi.sq.stat.lambda
+dim(R) # degrees of freedom
 p.val.lambda
 
 #chi.sq.stat <- t(R[1:2, 1:2] %*% theta[1:2] - r[1:2]) %*% solve(R[1:2, 1:2] %*% (boot.cov[1:2, 1:2]) %*% t(R[1:2, 1:2])) %*% (R[1:2, 1:2] %*% theta[1:2] - r[1:2])

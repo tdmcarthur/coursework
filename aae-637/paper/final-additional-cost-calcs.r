@@ -529,8 +529,8 @@ ret.ls
 
 add.family.labor.to.hired.labor <- FALSE
 
-add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 1, regimes.eqn = FALSE, set.params.zero = "NONE",
-result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa fam labor fixed actual/simple nonlinear/sgmGMEnonlinearPapa00000mean-impute-finally-correct-param-output.txt")
+add.cost.results.non.regimes <- additional.cost(seed.number = 0, target.top.crop.number = 3, regimes.eqn = FALSE, set.params.zero = "NONE",
+result.filename = "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/cebada fam labor fixed actual/simple nonlinear/sgmGMEnonlinearCebada00000mean-impute-finally-correct-param-output.txt")
 # "/Users/travismcarthur/Desktop/Bolivia alloc paper/results/papa bootstrap fam labor fixed/simple nonlinear/sgmGMEnonlinearPapa00000mean-impute-no-cost-fn-no-SUR-logit-attempt-param-output.txt"
 
 
