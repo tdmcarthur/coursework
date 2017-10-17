@@ -110,7 +110,7 @@ for ( i in 1:num.body.dataframes) {
   colnames(raw.body.df)[1] <- paste0(paste0(rep(" ", max(nchar(row.names(raw.body.df)))), collapse=""), colnames(raw.body.df)[1])
 
   file <- tempfile()
-  print(colnames(raw.body.df))
+  #print(colnames(raw.body.df))
   write.fwf(raw.body.df, file=file, 
     append=FALSE, quote=FALSE, sep="    ", na="", justify="right", 
     width = c(max(nchar(row.names(raw.body.df))), 15,15,15,15),
