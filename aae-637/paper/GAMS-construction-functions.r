@@ -59,7 +59,7 @@ largest.remainder.method <- function(x, digits, index=1) {
 
 if ( any(grepl("^s[0-9]+$", names(x)))) {
   x[, grepl("^s[0-9]+$", names(x))] <- 
-    as.data.frame(largest.remainder.method(x=x[, grepl("^s[0-9]+$", names(x))], digits=5))
+    as.data.frame(largest.remainder.method(x=x[, grepl("^s[0-9]+$", names(x))], digits=10))
 }
   
 #  x<- x[rowSums(as.data.frame(largest.remainder.method(x=x[, grepl("^s[0-9]+$", names(x))], digits=5)))!=1, grepl("^s[0-9]+$", names(x))][2, ]
@@ -70,9 +70,9 @@ if ( any(grepl("^s[0-9]+$", names(x)))) {
   
 raw.first.df <- x[, 1:4]
 
-colnames(raw.first.df) <- sprintf("%10s", as.character(1:4))
+colnames(raw.first.df) <- sprintf("%15s", as.character(1:4))
 
-raw.first.df<- as.data.frame(apply(signif(raw.first.df, digits=5), 2, FUN=as.character))
+raw.first.df<- as.data.frame(apply(signif(raw.first.df, digits=10), 2, FUN=as.character))
 
 row.names(raw.first.df) <- paste0( " ", format(1:nrow(raw.first.df), justify="right") )
 
@@ -81,7 +81,8 @@ colnames(raw.first.df)[1] <- paste0(paste0(rep(" ", max(nchar(row.names(raw.firs
 file <- tempfile()
 
 write.fwf(raw.first.df, file=file, 
-  append=FALSE, quote=FALSE, sep="    ", na="", justify="right", width = c(max(nchar(row.names(raw.first.df))), 10,10,10,10),
+  append=FALSE, quote=FALSE, sep="    ", na="", justify="right", 
+  width = c(max(nchar(row.names(raw.first.df))), 15,15,15,15),
   rownames=TRUE, rowCol="")
 
 processed.first.df <- readLines(file)
@@ -99,9 +100,9 @@ for ( i in 1:num.body.dataframes) {
 
   raw.body.df <- x[, (1:4)+4*i]
 
-  colnames(raw.body.df) <- sprintf("%10s", as.character((1:4)+4*i))
+  colnames(raw.body.df) <- sprintf("%15s", as.character((1:4)+4*i))
 
-  raw.body.df<- as.data.frame(apply(signif(raw.body.df, digits=5), 2, FUN=as.character))
+  raw.body.df<- as.data.frame(apply(signif(raw.body.df, digits=10), 2, FUN=as.character))
   # HERE IS THE LINE THAT CAUSES A LOT OF THE SLOWDOWN
 
   row.names(raw.body.df) <- paste0( " ", format(1:nrow(raw.body.df), justify="right") )
@@ -109,9 +110,10 @@ for ( i in 1:num.body.dataframes) {
   colnames(raw.body.df)[1] <- paste0(paste0(rep(" ", max(nchar(row.names(raw.body.df)))), collapse=""), colnames(raw.body.df)[1])
 
   file <- tempfile()
-
+  print(colnames(raw.body.df))
   write.fwf(raw.body.df, file=file, 
-    append=FALSE, quote=FALSE, sep="    ", na="", justify="right", width = c(max(nchar(row.names(raw.body.df))), 10,10,10,10),
+    append=FALSE, quote=FALSE, sep="    ", na="", justify="right", 
+    width = c(max(nchar(row.names(raw.body.df))), 15,15,15,15),
     rownames=TRUE, rowCol="")
 
   processed.body[[i]] <- readLines(file)
@@ -131,9 +133,9 @@ if ( ncol(x) > 4*(num.body.dataframes+1) ) {
 
   raw.last.df <- x[, (4*(num.body.dataframes+1)+1):ncol(x), drop=FALSE ]
   
-  colnames(raw.last.df) <- sprintf("%10s", (4*(num.body.dataframes+1)+1):ncol(x))
+  colnames(raw.last.df) <- sprintf("%15s", (4*(num.body.dataframes+1)+1):ncol(x))
 
-  raw.last.df<- as.data.frame(apply(signif(raw.last.df, digits=5), 2, FUN=as.character))
+  raw.last.df<- as.data.frame(apply(signif(raw.last.df, digits=10), 2, FUN=as.character))
 
   row.names(raw.last.df) <- paste0( " ", format(1:nrow(raw.last.df), justify="right") )
 
@@ -142,8 +144,9 @@ if ( ncol(x) > 4*(num.body.dataframes+1) ) {
   file <- tempfile()
 
   write.fwf(raw.last.df, file=file, 
-    append=FALSE, quote=FALSE, sep="    ", na="", justify="right", width = c(max(nchar(row.names(raw.last.df))), 
-      rep(10, ncol(raw.last.df))),
+    append=FALSE, quote=FALSE, sep="    ", na="", justify="right", 
+    width = c(max(nchar(row.names(raw.last.df))), 
+      rep(15, ncol(raw.last.df))),
     rownames=TRUE, rowCol="")
 
   processed.last.df <- readLines(file)
