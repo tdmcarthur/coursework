@@ -10,6 +10,8 @@ additional.cost <- function(seed.number = 0, target.top.crop.number, regimes.eqn
   
   demand.eqn.num <- 6
   
+  add.family.labor.to.hired.labor <- TRUE
+  
   # WARNING: This is a hack for   # Error in paste0(GAMS.projdir, "MLEmultinomiallogit", strsplit(target.crop,  : 
   #object 'GAMS.projdir' not found
 # 
