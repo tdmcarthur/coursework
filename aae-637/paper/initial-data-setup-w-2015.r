@@ -3,9 +3,226 @@ library("foreign")
 impute.mean.or.median <- mean
 # Set the imputation of the mean or median here
 
-work.dir <- "/Users/travismcarthur/Desktop/From old comp/Metrics (637)/Final paper/"
+work.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Final paper/"
 
 inputs.df<- read.spss(paste0(work.dir, "bd68/2-AGRICOLA/Cultivos (Preg-19)/2.-ENA08_BOLIVIA_CULTIVOS_PRODUCCION_INSUMOS(preg_19).sav"), to.data.frame=TRUE)
+
+
+ag.2015.df <- read.spss(paste0(work.dir,  "bd67/BD Spss/2.-Agricola/agricola verano e invierno.sav"), to.data.frame = TRUE)
+
+ag.2015.df <- ag.2015.df[(substr(ag.2015.df$cuestionario, 1, 3) == "ver"), ]
+# Only take the verano survey
+
+ag.2015.df$cultiv <- gsub("(^ +)|( +$)", "", as.character(ag.2015.df$cultiv))
+
+sort(table(ag.2015.df$cultiv))
+
+# Area censal: http://anda.ine.gob.bo/ANDA4_2/index.php/catalog/279/datafile/F1/V4
+
+# So any variable with "_exp" is the "expanded" value, i.e. multiplied by the expanision factor
+# sup	Superficie en hectareas
+# prod	Produccion en quintales
+# riego	Esta bajo riego
+# cant_sem	Cantidad de semilla que utilizo
+# tipo_sem	La semilla empleada fue
+# precio_sem	Precio de la semilla
+# cant_abo_org	cantidad de abono organico
+# cum_abo_org	Unidad de medida del abono organico
+# cost_abo_org	costo del abono organico
+# cant_plag	Cantidad de Plaguicida
+# cum_plag	Unidad de medida del plaguicida
+# cost_plag	Costo del plaguicida
+# cant_abo_qui	Cantidad de abono quimico
+# cum_abo_qui	Unidad de medida del abono quimico
+# cost_abo_qui	Costo del abono quimico
+# cant_abo_qui2	Cantidad de abono quimico 2
+# cant_abo_qui2_exp	Expandido: Cantidad de abono quimico 2
+# cum_abo_qui2	unidad de medida del abono quimico 2
+# cost_abo_qui2	costo del abono quimico 2
+# cant_insec	Cantidad de Insecticida
+# cum_insec	Unidad de medida del insecticida
+# cost_insec	Costo del insecticida
+# cant_fun	Cantidad de Fungicida
+# cum_fun	Unidad de medida del Fungicida
+# cost_fun	Costo del fungicida
+# cant_her	Cantidad de herbicida
+# cant_her_exp	Expandido: Cantidad de herbicida
+# cum_her	Unidad de medida del herbicida
+# cost_her	Costo del herbicida
+# prepsue	En la preparacion del Suelo Usa
+# siem	En la siembra usa
+# cos	En la cosecha usa
+# THE TRACTOR USE VARIABLES ARE SIMILAR TO 2008
+# pprecnal	Produccion, precio mercado nacional
+
+
+#N <- 6
+#N^2 + N*6
+
+# > round(prop.table(table(ag.2015.df$efecto, useNA = "ifany"))*100, 1)
+#       Helada     Granizada        Sequia Riada, Inunda        Nevada          Otro       Ninguna          <NA>
+#         14.1          11.1          15.4           5.7           0.1          10.7          40.0           2.9
+
+#> summary(ag.2015.df$prod / ag.2015.df$prod_efec)
+#   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's
+#  0.000   0.400   0.533   0.530   0.714   0.999   12820
+#> prop.table(table(is.na(ag.2015.df$prod / ag.2015.df$prod_efec)))
+#    FALSE      TRUE
+#0.5709361 0.4290639
+
+# > round(prop.table(table(ag.2015.df$tipo_sem	, useNA = "ifany"))*100, 1)
+#        Propia    Certificada No Certificada           <NA>
+#          64.7           15.0           16.9            3.3
+
+#
+
+# So we are OK on seed unit of measurement
+# > as.character(unique(ag.2015.df$cum_sem[ag.2015.df$cultiv == "Papa"]))
+#[1] "Kilogramo "
+#> as.character(unique(ag.2015.df$cum_sem[ag.2015.df$cultiv == "Maíz"]))
+#[1] "Kilogramo "
+#> as.character(unique(ag.2015.df$cum_sem[ag.2015.df$cultiv == "Haba verde"]))
+#[1] "Kilogramo "
+#> as.character(unique(ag.2015.df$cum_sem[ag.2015.df$cultiv == "Trigo"]))
+#[1] "Kilogramo "
+
+
+# TODO: must determine how to handle litros, etc. and make it consistent with the 2008 data.
+# There are different types of abono
+# > round(prop.table(table(ag.2015.df$cum_abo_org, useNA = "ifany"))*100, 1)
+#           Kilogramo  Litros     Quintal
+#      72.6        0.1        0.7       26.6
+
+# > round(prop.table(table(ag.2015.df$cum_plag, useNA = "ifany"))*100, 1)
+#           Kilogramo  Litros     Quintal
+#      99.3        0.2        0.5        0.0
+
+
+# 50% of herbicides name not recorded
+# 25% of fungicidas
+# 18% insecticides
+
+# ""NCP" creo que quiere decir "No Clasificadas Precedentemente", es decir, que no están clasificadas en la lista. "
+# https://forum.wordreference.com/threads/actividades-otras-asociaciones-ncp.2431245/
+
+# > sort(round(prop.table(table(ag.2015.df$prepsue, useNA = "ifany"))*100, 1))
+#               <NA>       Fuerza Animal Maquinaria Agricola       Fuerza Humana
+#                3.3                26.4                31.3                38.9
+
+#> by((ag.2015.df$hraprep/ag.2015.df$sup)[ag.2015.df$cultiv == "Papa"], ag.2015.df$prepsue[ag.2015.df$cultiv == "Papa"], summary)
+#ag.2015.df$prepsue[ag.2015.df$cultiv == "Papa"]: Maquinaria Agricola
+#    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.
+#7.14e-02 2.00e+00 4.00e+00 1.45e+01 1.00e+01 1.80e+03
+#-------------------------------------------------------------------------------------
+#ag.2015.df$prepsue[ag.2015.df$cultiv == "Papa"]: Fuerza Animal
+#    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.
+#    0.21    26.67    64.00   323.38   176.80 48000.00
+#-------------------------------------------------------------------------------------
+#ag.2015.df$prepsue[ag.2015.df$cultiv == "Papa"]: Fuerza Humana
+#    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.
+#    0.32    72.00   176.00   637.82   480.00 18461.54
+
+#> by((ag.2015.df$hrasiem/ag.2015.df$sup)[ag.2015.df$cultiv == "Papa"], ag.2015.df$siem[ag.2015.df$cultiv == "Papa"], summary)
+#ag.2015.df$siem[ag.2015.df$cultiv == "Papa"]: Maquinaria Agricola
+#   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+#   0.20    2.00    4.00   18.81   15.00 1600.00
+#-------------------------------------------------------------------------------------
+#ag.2015.df$siem[ag.2015.df$cultiv == "Papa"]: Fuerza Animal
+#    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.
+#    0.07    16.00    32.00   165.06    75.00 38400.00
+#-------------------------------------------------------------------------------------
+#ag.2015.df$siem[ag.2015.df$cultiv == "Papa"]: Fuerza Humana
+#    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.
+#    0.16    32.00    72.00   253.61   200.00 16000.00
+
+#> prop.table(table(ag.2015.df$siem[ag.2015.df$cultiv == "Papa"]))
+#Maquinaria Agricola       Fuerza Animal       Fuerza Humana
+#          0.1251293           0.5694588           0.3054119
+
+#> prop.table(table(ag.2015.df$prepsue[ag.2015.df$cultiv == "Papa"]))
+#Maquinaria Agricola       Fuerza Animal       Fuerza Humana
+#          0.3598759           0.4550155           0.1851086
+
+#> prop.table(table(ag.2015.df$cos[ag.2015.df$cultiv == "Papa"]))
+#Maquinaria Agricola       Fuerza Animal       Fuerza Humana
+#         0.01137539          0.02292313          0.96570148
+
+
+hh.1.2015.df <- read.spss(paste0(work.dir,  "bd67/BD Spss/1.-Hogar/Hogar_parte1.sav"), to.data.frame = TRUE)
+
+hh.2.2015.df <- read.spss(paste0(work.dir,  "bd67/BD Spss/1.-Hogar/Hogar_parte2.sav"), to.data.frame = TRUE)
+
+hh.3.2015.df <- read.spss(paste0(work.dir,  "bd67/BD Spss/1.-Hogar/Hogar_parte3.sav"), to.data.frame = TRUE)
+
+# library("memisc")
+# data <- as.data.frame(as.data.set(spss.system.file(paste0(work.dir,  "bd67/BD Spss/1.-Hogar/Hogar_parte2.sav"))))
+# This above will avoid warnings: https://stackoverflow.com/questions/3136293/read-spss-file-into-r
+
+# #dep04 prov24 secc58 cant75 zonloc760
+
+prop.table(table(nchar(gsub(".*Cod: [0-9]*-", "", gsub("(^ +)|( +$)", "", hh.2.2015.df[!grepl("Censal", hh.2.2015.df$upm),]$upm))))*100)
+
+comunidad.ids <- unique(gsub(".*Cod: [0-9]*-", "", gsub("(^ +)|( +$)", "", hh.2.2015.df[!grepl("Censal", hh.2.2015.df$upm),]$upm)))
+comunidad.ids <- comunidad.ids[grepl("[0-9]", comunidad.ids)]
+
+# 300 to try to match "manually"
+
+
+
+library("foreign")
+library("PBSmapping")
+# install.packages("rgdal", repos="http://cran.us.r-project.org", type = "source")
+# Warnings: as of now, must install rgdal from source
+# Ok, this is how i finally fixed it:
+# from http://cran.r-project.org/web/packages/rgdal/, download "OS X Snow Leopard binaries"
+# Then:
+# sudo R CMD INSTALL /Users/travismcarthur/Downloads/rgdal_0.9-1.tgz
+
+# May also have to do the following:
+# Accord to http://cran.r-project.org/web/packages/rgdal/ , must download GDAL from http://www.kyngchaos.com/software/frameworks
+# And then edit bash_profile in accordance with the GDAL readme file that
+# comes wit the kyngchaos install. input "gdal-config" in Terminal to
+# confirm GDAL has been installed
+# --configure-args='--with-gdal-config=/travismcarthur/local/bin/gdal-config'
+
+library("rgdal")
+
+# install.packages("splancs", repos="http://cran.us.r-project.org")
+library("splancs")
+
+
+
+pob.2016.shp <- importShapefile(paste0("/Users/travismcarthur/Downloads/POBLACIONES/POBLACIONES.shp"))
+pob.2016.shp$id_unico <- as.character(pob.2016.shp$id_unico)
+
+library("data.table")
+
+pob.2016.dt <- data.table(pob.2016.shp[, c("EID", "id_unico")])
+
+trim.ids.ls <- list()
+
+for ( i in 1:max(nchar(pob.2016.dt$id_unico))) {
+  trim.ids.ls[[i]] <- copy(pob.2016.dt)
+  trim.ids.ls[[i]] <- trim.ids.ls[[i]][, id_unico := substr(id_unico, 1, i)]
+}
+
+pob.2016.dt <- rbindlist(trim.ids.ls)
+
+pob.2016.dt <- pob.2016.dt[!duplicated(pob.2016.dt, by = NULL), ]
+
+pob.2016.dt[, duplicate := .N > 1, by = "id_unico"]
+# setorder(pob.2016.dt, id_unico)
+pob.2016.dt <- pob.2016.dt[duplicate != TRUE, ]
+
+
+comunidad.ids <- gsub("^0", "", comunidad.ids)
+comunidad.ids <- unique(comunidad.ids)
+comunidad.ids <- comunidad.ids[nchar(comunidad.ids) > 1]
+comunidad.ids.dt <- data.table(id_unico = comunidad.ids)
+
+comunidad.ids.dt <- merge(pob.2016.dt, comunidad.ids.dt)
+
+
 
 # TODO: Need to figure out this warning message:
 # "Unrecognized record type 7, subtype 18 encountered in system file"
@@ -15,8 +232,8 @@ colnames(inputs.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(inputs.df, 
 
 # tar -zcvf projdir10-28.tar.gz /home/c/cschmidt/TravisImInYourInternets/gamsdir/projdir
 
-exclude.index <- is.na(inputs.df$x19.abono.cantidad.quintal) | 
-  inputs.df$x19.superficie.cultivada.hectareas==0  
+exclude.index <- is.na(inputs.df$x19.abono.cantidad.quintal) |
+  inputs.df$x19.superficie.cultivada.hectareas==0
 # Small exclusion for now
 inputs.df <- inputs.df[!exclude.index, ]
 
@@ -50,7 +267,7 @@ for ( i in grep("bs.quintal", colnames(inputs.df)) ) {
 
 # Use below for Amelia
 #for ( i in grep("bs.quintal", colnames(inputs.df)) ) {
-#  inputs.df[, gsub("bs.quintal", "bs.kg", colnames(inputs.df)[i]) ][ 
+#  inputs.df[, gsub("bs.quintal", "bs.kg", colnames(inputs.df)[i]) ][
 #  inputs.df[, gsub("bs.quintal", "bs.kg", colnames(inputs.df)[i]) ]==0] <- NA
 #}
 
@@ -74,7 +291,7 @@ geog.df$sector.full <- with(geog.df, { paste0(departamento, provincia, seccion.p
 geog.df$segmento.full <- with(geog.df, { paste0(departamento, provincia, seccion.provincial, canton, x6.sector, x7.segmento) } )
 
 
-inputs.df <- merge(inputs.df, geog.df[, c("folio", "provincia.full", 
+inputs.df <- merge(inputs.df, geog.df[, c("folio", "provincia.full",
   "seccion.full", "canton.full", "sector.full", "segmento.full"  )])
 
 
@@ -96,13 +313,13 @@ for ( target.input in input.price.columns) {
   for (i in impute.levels) {
     inputs.df[, paste0(target.input, ".impute.level")] <- NA
     inputs.df[inputs.df[, target.input]!=0, paste0(target.input, ".impute.level")] <- "itself"
-    
+
     if ( i=="household") { split.level <- "folio"} else { split.level <- i}
     if (i=="nation") {geog.split.ls[[i]] <- inputs.df; next}
-    
-    inputs.for.split <- inputs.df[ inputs.df[, paste0(target.input, ".impute.level")] %in% "itself", 
+
+    inputs.for.split <- inputs.df[ inputs.df[, paste0(target.input, ".impute.level")] %in% "itself",
       c(split.level, target.input, "x19.codigo")]
-    
+
     list.temp[[i]] <- split(x=inputs.for.split , f=inputs.for.split[, split.level])
   }
   geog.split.ls[[target.input]] <- list.temp
@@ -114,14 +331,14 @@ for ( target.input in input.price.columns) {
 
 input.price.columns <- c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abono.bs.kg", "x19.plagicidas.bs.kg")
 
-nation.input.averages <- apply(inputs.df[, input.price.columns], 2, FUN=function(x) impute.mean.or.median(x[x>0], na.rm=TRUE)) 
+nation.input.averages <- apply(inputs.df[, input.price.columns], 2, FUN=function(x) impute.mean.or.median(x[x>0], na.rm=TRUE))
 nation.input.nobs <- apply(inputs.df[, input.price.columns], 2, FUN=function(x) { x <- x[!is.na(x)]; length(x[x>0])} )
 nation.input.sd <- apply(inputs.df[, input.price.columns], 2, FUN=function(x) sd(x[x>0], na.rm=TRUE) )
 
 for (target.input in input.price.columns ) {
 
   inputs.df[, paste0(target.input, ".impute.level")] <- NA
-  
+
   inputs.df[inputs.df[, target.input]!=0, paste0(target.input, ".impute.level")] <- "itself"
 
 impute.levels <- c("household", "segmento.full", "sector.full", "canton.full", "seccion.full", "provincia.full", "departamento", "nation")
@@ -137,7 +354,7 @@ for (i in 1:nrow(inputs.df)) {
 if (inputs.df[i, paste0(target.input, ".impute.level")] %in% "itself") {next}
 
 for (impute.level in impute.levels) {
-  
+
   if (target.input=="x19.sem.comprada.bs.kg") {
     if(impute.level=="household") {
       seed.switcher <- geog.split.ls.targ.input[[ impute.level ]][[ inputs.df$folio[i] ]]$x19.codigo==inputs.df$x19.codigo[i]
@@ -148,20 +365,20 @@ for (impute.level in impute.levels) {
     seed.switcher <- TRUE
   }
 
-  if (impute.level=="nation") { 
-    imputed.data.ls[[i]] <- c(unname(nation.input.averages[target.input]), 
+  if (impute.level=="nation") {
+    imputed.data.ls[[i]] <- c(unname(nation.input.averages[target.input]),
       impute.level, unname(nation.input.nobs[target.input]), unname(nation.input.sd[target.input]))
     break
   }
-  
+
   if(impute.level=="household") {
     impute.data <-   geog.split.ls.targ.input[[ impute.level ]][[ inputs.df$folio[i] ]][seed.switcher, target.input]
   } else {
     impute.data <- geog.split.ls.targ.input[[ impute.level ]][[ inputs.df[i, impute.level] ]][seed.switcher, target.input]
   }
-  
+
   if (impute.level=="household" && !all(is.na(impute.data)) && length(impute.data)>0  ) {
-    
+
 #     inputs.df[i, target.input] <- median( impute.data )
 #     inputs.df[i, c(target.input, paste0(target.input, ".impute.level") )] <- "household"
       imputed.data.ls[[i]] <- c(impute.mean.or.median( impute.data ), "household", length(impute.data), sd(impute.data))
@@ -169,14 +386,14 @@ for (impute.level in impute.levels) {
      break
   }
   if (impute.level=="household") {next}
-  
+
   #target.crop<-prod01.df$crop[i]
 
-#  match.index <- inputs.df[, impute.level] == inputs.df[i, impute.level] & 
+#  match.index <- inputs.df[, impute.level] == inputs.df[i, impute.level] &
 #    inputs.df[, paste0(target.input, ".impute.level")] %in% "itself"
-  
+
 #  impute.sample.size <- sum(match.index)
-  
+
   if (!all(is.na(impute.data)) && length(impute.data) >= 3) {
 #    inputs.df[i, target.input] <- median(impute.data )
 #    inputs.df[i, paste0(target.input, ".impute.level")] <- impute.level
@@ -184,13 +401,13 @@ for (impute.level in impute.levels) {
     imputed.data.ls[[i]] <- c(impute.mean.or.median( impute.data ), impute.level, length(impute.data), sd(impute.data))
     break
   }
-  
 
-  
+
+
 }
- 
+
  cat(target.input, i, impute.level, "\n")
-  
+
 }
 
 temp.imputed.df <- data.frame(matrix(unlist(imputed.data.ls), ncol=4, byrow=TRUE), stringsAsFactors=FALSE)
@@ -198,16 +415,16 @@ temp.imputed.df[, 1] <- as.numeric(temp.imputed.df[, 1])
 temp.imputed.df[, 3] <- as.numeric(temp.imputed.df[, 3])
 temp.imputed.df[, 4] <- as.numeric(temp.imputed.df[, 4])
 
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), target.input] <- 
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), target.input] <-
   temp.imputed.df[, 1]
 
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.level") ] <- temp.imputed.df[, 2]
-  
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.n.obs") ] <- temp.imputed.df[, 3]
-  
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.sd") ] <- temp.imputed.df[, 4]
 
 }
@@ -249,7 +466,7 @@ for (k in input.price.columns ) {
 
 
 
-  
+
 
 
 #### BEGIN SECTION
@@ -268,7 +485,7 @@ nation.input.sd <- apply(inputs.df[, input.price.columns], 2, FUN=function(x) sd
 for (target.input in input.price.columns ) {
 
   inputs.df[, paste0(target.input, ".impute.level")] <- NA
-  
+
   inputs.df[inputs.df[, target.input]!=0, paste0(target.input, ".impute.level")] <- "itself"
 
 impute.levels <- c("household", "segmento.full", "sector.full", "canton.full", "seccion.full", "provincia.full", "departamento", "nation")
@@ -282,31 +499,31 @@ for (i in 1:nrow(inputs.df)) {
 if (inputs.df[i, paste0(target.input, ".impute.level")] %in% "itself") {next}
 
 for (impute.level in impute.levels) {
-  
+
   if (target.input=="x19.sem.comprada.bs.kg") {
     seed.switcher <- inputs.df$x19.codigo==inputs.df$x19.codigo[i]
   } else {
     seed.switcher <- TRUE
   }
 
-  if (impute.level=="nation") { 
-    imputed.data.ls[[i]] <- c(unname(nation.input.averages[target.input]), 
+  if (impute.level=="nation") {
+    imputed.data.ls[[i]] <- c(unname(nation.input.averages[target.input]),
       impute.level, unname(nation.input.nobs[target.input]), unname(nation.input.sd[target.input]))
     break
   }
-  
+
   if(impute.level=="household") {
-    impute.data <- inputs.df[ inputs.df$folio==inputs.df$folio[i] & 
+    impute.data <- inputs.df[ inputs.df$folio==inputs.df$folio[i] &
          inputs.df[, paste0(target.input, ".impute.level")] %in% "itself" &
          seed.switcher , target.input]
   } else {
-    impute.data <- inputs.df[ inputs.df[, impute.level] == inputs.df[i, impute.level] & 
+    impute.data <- inputs.df[ inputs.df[, impute.level] == inputs.df[i, impute.level] &
          inputs.df[, paste0(target.input, ".impute.level")] %in% "itself" &
          seed.switcher, target.input]
   }
-  
+
   if (impute.level=="household" && length(impute.data)>0  ) {
-    
+
 #     inputs.df[i, target.input] <- median( impute.data )
 #     inputs.df[i, c(target.input, paste0(target.input, ".impute.level") )] <- "household"
       imputed.data.ls[[i]] <- c(impute.mean.or.median( impute.data ), "household", length(impute.data), sd(impute.data))
@@ -314,14 +531,14 @@ for (impute.level in impute.levels) {
      break
   }
   if (impute.level=="household") {next}
-  
+
   #target.crop<-prod01.df$crop[i]
 
-#  match.index <- inputs.df[, impute.level] == inputs.df[i, impute.level] & 
+#  match.index <- inputs.df[, impute.level] == inputs.df[i, impute.level] &
 #    inputs.df[, paste0(target.input, ".impute.level")] %in% "itself"
-  
+
 #  impute.sample.size <- sum(match.index)
-  
+
   if (length(impute.data) >= 3) {
 #    inputs.df[i, target.input] <- median(impute.data )
 #    inputs.df[i, paste0(target.input, ".impute.level")] <- impute.level
@@ -329,13 +546,13 @@ for (impute.level in impute.levels) {
     imputed.data.ls[[i]] <- c(impute.mean.or.median( impute.data ), impute.level, length(impute.data), sd(impute.data))
     break
   }
-  
 
-  
+
+
 }
- 
+
  cat(target.input, i, impute.level, "\n")
-  
+
 }
 
 temp.imputed.df <- data.frame(matrix(unlist(imputed.data.ls), ncol=4, byrow=TRUE), stringsAsFactors=FALSE)
@@ -343,16 +560,16 @@ temp.imputed.df[, 1] <- as.numeric(temp.imputed.df[, 1])
 temp.imputed.df[, 3] <- as.numeric(temp.imputed.df[, 3])
 temp.imputed.df[, 4] <- as.numeric(temp.imputed.df[, 4])
 
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), target.input] <- 
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), target.input] <-
   temp.imputed.df[, 1]
 
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.level") ] <- temp.imputed.df[, 2]
-  
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.n.obs") ] <- temp.imputed.df[, 3]
-  
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.sd") ] <- temp.imputed.df[, 4]
 
 }
@@ -388,7 +605,7 @@ for (k in input.price.columns ) {
 
 
 
-mano.obra.df <- read.spss(paste0(work.dir, "bd68/6-MANO DE OBRA/24.-ENA08_BOLIVIA_MANO_DE_OBRA(preg_98-101).sav"), to.data.frame=TRUE) 
+mano.obra.df <- read.spss(paste0(work.dir, "bd68/6-MANO DE OBRA/24.-ENA08_BOLIVIA_MANO_DE_OBRA(preg_98-101).sav"), to.data.frame=TRUE)
 
 
 colnames(mano.obra.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(mano.obra.df, "variable.labels")) ) )
@@ -398,7 +615,7 @@ mano.obra.df <- data.frame(mano.obra.df)
 mano.obra.df$paid.hours <- mano.obra.df$x1003.hrs.promedio.x.jornal * (
   mano.obra.df$x991.lab.agricolas...hombre...6mes * 9 * 4.345 * 5 +
   mano.obra.df$x991.lab.agricolas...mujer...6mes.1 * 9 * 4.345 * 5 +
-  mano.obra.df$x991.lab.agricolas...hombre...6mes * 3 * 4.345 * 5 + 
+  mano.obra.df$x991.lab.agricolas...hombre...6mes * 3 * 4.345 * 5 +
   mano.obra.df$x991.lab.agricolas...mujer...6mes.1 * 3 * 4.345 * 5 )
 
 mano.obra.df$multiplier.for.fam.labor <- with(mano.obra.df,
@@ -416,7 +633,7 @@ mano.obra.df$multiplier.for.fam.labor <- with(mano.obra.df,
 
 mano.obra.df$multiplier.for.fam.labor[!is.finite(mano.obra.df$multiplier.for.fam.labor)] <- 0
 
-# get the average hours a paid worker puts in,( accounting for # ofmonths)also taking weighted averaghe of # of months), 
+# get the average hours a paid worker puts in,( accounting for # ofmonths)also taking weighted averaghe of # of months),
 # in order to get an estimate
 # of what a family member would put in. Later impute this quantity.
 
@@ -425,23 +642,23 @@ mano.obra.df$multiplier.for.fam.labor[!is.finite(mano.obra.df$multiplier.for.fam
 # 4.345 weeks in a month according to http://www.convertunits.com/from/weeks/to/months
 
 comida.dif <- mean(
-  mano.obra.df$x1002.sin.comida[mano.obra.df$x1001.con.comida>0 & mano.obra.df$x1002.sin.comida>0] / 
+  mano.obra.df$x1002.sin.comida[mano.obra.df$x1001.con.comida>0 & mano.obra.df$x1002.sin.comida>0] /
   mano.obra.df$x1001.con.comida[mano.obra.df$x1001.con.comida>0 & mano.obra.df$x1002.sin.comida>0]
-) 
+)
 
 # TODO: as a refinement, this should be geographically linked
 
-mano.obra.df$x1001.con.comida[mano.obra.df$x1001.con.comida>0 & !mano.obra.df$x1002.sin.comida>0] <- comida.dif * 
-  mano.obra.df$x1001.con.comida[mano.obra.df$x1001.con.comida>0 & !mano.obra.df$x1002.sin.comida>0] 
+mano.obra.df$x1001.con.comida[mano.obra.df$x1001.con.comida>0 & !mano.obra.df$x1002.sin.comida>0] <- comida.dif *
+  mano.obra.df$x1001.con.comida[mano.obra.df$x1001.con.comida>0 & !mano.obra.df$x1002.sin.comida>0]
 
 mano.obra.df$hourly.wage <- 0
 
 mano.obra.df$hourly.wage[mano.obra.df$x1003.hrs.promedio.x.jornal>0] <- mano.obra.df$x1001.con.comida[mano.obra.df$x1003.hrs.promedio.x.jornal>0] /
    mano.obra.df$x1003.hrs.promedio.x.jornal[mano.obra.df$x1003.hrs.promedio.x.jornal>0]
-   
-mano.obra.df <- merge(mano.obra.df, geog.df[, c("folio", "provincia.full", 
+
+mano.obra.df <- merge(mano.obra.df, geog.df[, c("folio", "provincia.full",
   "seccion.full", "canton.full", "sector.full", "segmento.full"  )])
-  
+
 mano.obra.df$hourly.tractor.rental <- mano.obra.df$x101.cual.el.costo.de.la.hra.tractor.alquilado
 
 
@@ -457,7 +674,7 @@ nation.input.sd <- apply(mano.obra.df[, input.price.columns], 2, FUN=function(x)
 for (target.input in input.price.columns ) {
 
   mano.obra.df[, paste0(target.input, ".impute.level")] <- NA
-  
+
   mano.obra.df[mano.obra.df[, target.input]!=0, paste0(target.input, ".impute.level")] <- "itself"
 
 impute.levels <- c("household", "segmento.full", "sector.full", "canton.full", "seccion.full", "provincia.full", "departamento", "nation")
@@ -471,37 +688,37 @@ if (mano.obra.df[i, paste0(target.input, ".impute.level")] %in% "itself") {next}
 
 for (impute.level in impute.levels) {
 
-  if (impute.level=="nation") { 
-    imputed.data.ls[[i]] <- c(unname(nation.input.averages[target.input]), 
+  if (impute.level=="nation") {
+    imputed.data.ls[[i]] <- c(unname(nation.input.averages[target.input]),
       impute.level, unname(nation.input.nobs[target.input]), unname(nation.input.sd[target.input]))
     break
   }
-  
+
   if(impute.level=="household") {
-    impute.data <- mano.obra.df[ mano.obra.df$folio==mano.obra.df$folio[i] & 
+    impute.data <- mano.obra.df[ mano.obra.df$folio==mano.obra.df$folio[i] &
          mano.obra.df[, paste0(target.input, ".impute.level")] %in% "itself" , target.input]
   } else {
-    impute.data <- mano.obra.df[ mano.obra.df[, impute.level] == mano.obra.df[i, impute.level] & 
+    impute.data <- mano.obra.df[ mano.obra.df[, impute.level] == mano.obra.df[i, impute.level] &
          mano.obra.df[, paste0(target.input, ".impute.level")] %in% "itself" , target.input]
   }
-  
+
   if (impute.level=="household" && length(impute.data)>0  ) {
-    
+
     imputed.data.ls[[i]] <- c(impute.mean.or.median( impute.data ), "household", length(impute.data), sd(impute.data))
      break
   }
   if (impute.level=="household") {next}
 
-  
+
   if (length(impute.data) >= 3) {
     imputed.data.ls[[i]] <- c(impute.mean.or.median( impute.data ), impute.level, length(impute.data), sd(impute.data))
     break
   }
-  
+
 }
- 
+
  cat(i, "\n")
-  
+
 }
 
 temp.imputed.df <- data.frame(matrix(unlist(imputed.data.ls), ncol=4, byrow=TRUE), stringsAsFactors=FALSE)
@@ -510,18 +727,18 @@ temp.imputed.df[, 3] <- as.numeric(temp.imputed.df[, 3])
 temp.imputed.df[, 4] <- as.numeric(temp.imputed.df[, 4])
 
 
-mano.obra.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), target.input] <- 
+mano.obra.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), target.input] <-
   temp.imputed.df[, 1]
 
-mano.obra.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+mano.obra.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.level") ] <- temp.imputed.df[, 2]
 
-mano.obra.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+mano.obra.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.n.obs") ] <- temp.imputed.df[, 3]
-  
-mano.obra.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+
+mano.obra.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.sd") ] <- temp.imputed.df[, 4]
-  
+
 }
 
 for (k in input.price.columns ) {
@@ -534,7 +751,7 @@ for (k in input.price.columns ) {
 
 
 
-family.df <- read.spss(paste0(work.dir, "bd68/6-MANO DE OBRA/23.-ENA08_BOLIVIA_MIEMBROS_DEL_HOGAR(preg_97).sav"), to.data.frame=TRUE) 
+family.df <- read.spss(paste0(work.dir, "bd68/6-MANO DE OBRA/23.-ENA08_BOLIVIA_MIEMBROS_DEL_HOGAR(preg_97).sav"), to.data.frame=TRUE)
 
 
 colnames(family.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(family.df, "variable.labels")) ) )
@@ -557,7 +774,7 @@ mano.obra.df$ag.fam.labor.equiv.hrs <- mano.obra.df$multiplier.for.fam.labor * m
 
 
 
-tractor.df <- read.spss(paste0(work.dir, "bd68/8-JORNALES Y MAQUINARIA/26.-ENA08_BOLIVIA_JORNALES_MAQUINARIA EMPLEADA_1C (preg_104-107).sav"), to.data.frame=TRUE) 
+tractor.df <- read.spss(paste0(work.dir, "bd68/8-JORNALES Y MAQUINARIA/26.-ENA08_BOLIVIA_JORNALES_MAQUINARIA EMPLEADA_1C (preg_104-107).sav"), to.data.frame=TRUE)
 
 
 colnames(tractor.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(tractor.df, "variable.labels")) ) )
@@ -568,16 +785,16 @@ table(rowSums( table(tractor.df[, c(1,3)])>0))
 
 summary(tractor.aggregate <- aggregate( x107.hrs.tractor ~ folio, data=tractor.df, FUN=sum))
 
-# TODO: it's hard to determine what is sensible with distribution the tractor hours. 
-# By land area, in Leontief style? I could get more specific with distributing it out since 
+# TODO: it's hard to determine what is sensible with distribution the tractor hours.
+# By land area, in Leontief style? I could get more specific with distributing it out since
 # I know which lands used tractors
 
 mano.obra.df <- merge( mano.obra.df, tractor.aggregate, all=TRUE)
 
 intersect(names(mano.obra.df), names(inputs.df))
 
-inputs.df <- merge(inputs.df, mano.obra.df[, !colnames(mano.obra.df) %in% c("zona.agroproductiva", 
-  "factor.de.expansión", "departamento", "provincia.full", "seccion.full",  "canton.full", 
+inputs.df <- merge(inputs.df, mano.obra.df[, !colnames(mano.obra.df) %in% c("zona.agroproductiva",
+  "factor.de.expansión", "departamento", "provincia.full", "seccion.full",  "canton.full",
   "sector.full", "segmento.full")], by="folio", all.x=TRUE)
 
 
@@ -604,14 +821,14 @@ inputs.df$paid.hours.spread <- inputs.df$paid.hours * inputs.df$plot.prop.of.fir
 
 # TODO: we have something weird going on with hourly.tractor.rental and NA's
 
-#[3] "x991.lab.agricolas...hombre...6mes"               
-# [4] "x991.lab.agricolas...mujer...6mes"                
-# [5] "x991.lab.agricolas...hombre...6mes"               
-# [6] "x991.lab.agricolas...mujer...6mes"  
+#[3] "x991.lab.agricolas...hombre...6mes"
+# [4] "x991.lab.agricolas...mujer...6mes"
+# [5] "x991.lab.agricolas...hombre...6mes"
+# [6] "x991.lab.agricolas...mujer...6mes"
 
-#[15] "x1001.con.comida"                                 
-#[16] "x1002.sin.comida"                                 
-#[17] "x1003.hrs.promedio.x.jornal"   
+#[15] "x1001.con.comida"
+#[16] "x1002.sin.comida"
+#[17] "x1003.hrs.promedio.x.jornal"
 
 #  inputs.df.save <- inputs.df
 #  inputs.df <- inputs.df.save
@@ -619,39 +836,39 @@ inputs.df$paid.hours.spread <- inputs.df$paid.hours * inputs.df$plot.prop.of.fir
 
 tractor.df$x107.detalle.recoded <- as.character(tractor.df$x107.detalle)
 
-tractor.df$x107.detalle.recoded[ tractor.df$x107.detalle.recoded %in% 
+tractor.df$x107.detalle.recoded[ tractor.df$x107.detalle.recoded %in%
   c("Aplicación de abono       ", "Aplicación de fertilizant ", "Aplicación de fungicidas  ",
-  "Aplicación de herbicidas  ", "Aplicación de insecticida ", "Aplicación de Insecticidas", 
+  "Aplicación de herbicidas  ", "Aplicación de insecticida ", "Aplicación de Insecticidas",
   "Aplicación de riego       ", "Labores culturales        ") ] <- "Labores culturales"
 
 
-tractor.df$x107.detalle.recoded[ tractor.df$x107.detalle.recoded %in% 
-  c("Desmonte                  ", "Lomas artificiales        ", "Picado                    ", 
+tractor.df$x107.detalle.recoded[ tractor.df$x107.detalle.recoded %in%
+  c("Desmonte                  ", "Lomas artificiales        ", "Picado                    ",
   "Preparación del suelo     ", "Rotabatear                ") ] <- "Preparación del suelo"
 
 
-tractor.df$x107.detalle.recoded[ tractor.df$x107.detalle.recoded %in% 
-  c( "Embolsado,empacado, encaj ", "Labor de cosecha          ", "Selección del producto    ", 
+tractor.df$x107.detalle.recoded[ tractor.df$x107.detalle.recoded %in%
+  c( "Embolsado,empacado, encaj ", "Labor de cosecha          ", "Selección del producto    ",
   "Trillado                  ") ] <- "Labor de cosecha"
 
-tractor.df$x107.detalle.recoded[ tractor.df$x107.detalle.recoded %in% 
+tractor.df$x107.detalle.recoded[ tractor.df$x107.detalle.recoded %in%
   "Siembra                   " ] <- "Siembra"
 
 
 table( tractor.df$x107.detalle.recoded)
 
-tractor.df.big.agg <- aggregate(tractor.df[, "x107.hrs.tractor", drop=FALSE], 
-  by=list(folio=tractor.df$folio, x107.detalle.recoded=tractor.df$x107.detalle.recoded), 
-  FUN=sum, na.rm=TRUE) 
+tractor.df.big.agg <- aggregate(tractor.df[, "x107.hrs.tractor", drop=FALSE],
+  by=list(folio=tractor.df$folio, x107.detalle.recoded=tractor.df$x107.detalle.recoded),
+  FUN=sum, na.rm=TRUE)
 
 tractor.reshaped <- reshape(tractor.df.big.agg[, c("folio", "x107.detalle.recoded", "x107.hrs.tractor")], idvar="folio", timevar = "x107.detalle.recoded", direction="wide")
 
 colnames(tractor.reshaped) <- gsub(" ", ".", colnames(tractor.reshaped))
 
-tractor.reshaped <- tractor.reshaped[, c("folio", "x107.hrs.tractor.Labor.de.cosecha", 
-  "x107.hrs.tractor.Labores.culturales", "x107.hrs.tractor.Preparación.del.suelo", 
+tractor.reshaped <- tractor.reshaped[, c("folio", "x107.hrs.tractor.Labor.de.cosecha",
+  "x107.hrs.tractor.Labores.culturales", "x107.hrs.tractor.Preparación.del.suelo",
   "x107.hrs.tractor.Siembra") ]
-  
+
 tractor.reshaped[is.na(tractor.reshaped)] <- 0
 
 tractor.reshaped <- merge(tractor.reshaped, tractor.df[
@@ -668,7 +885,7 @@ tractor.reshaped[is.na(tractor.reshaped)] <- 0
 
 #inputs.df
 #x19.prepara.el.suelo
-#x19.siembra.planta 
+#x19.siembra.planta
 #x19.labores.culturales
 #x19.cosecha
 
@@ -705,7 +922,7 @@ table(duplicated(inputs.df[,  c("folio", "x19.nro.lote")], ))
 table(duplicated(inputs.df[,  c("folio", "nro")], ))
 
 
-tractor.agg<- aggregate(tractor.df$x107.hrs.tractor, by=list(tractor.df$folio, 
+tractor.agg<- aggregate(tractor.df$x107.hrs.tractor, by=list(tractor.df$folio,
   tractor.df$x104.indique.el.número.de.jornales.u.hrs.tractor), FUN=sum, na.rm=TRUE)
 
 colnames(tractor.agg) <-c("folio", "nro", "exact.plot.tractor.hrs")
@@ -730,7 +947,7 @@ inputs.df$exact.plot.tractor.hrs[is.na(inputs.df$exact.plot.tractor.hrs)] <- 0
 
 tractor.columns <- c("x107.hrs.tractor.Labor.de.cosecha" , "x107.hrs.tractor.Labores.culturales",
   "x107.hrs.tractor.Preparación.del.suelo", "x107.hrs.tractor.Siembra" )
-  
+
 
 
 corresponding.input <- c("x19.cosecha", "x19.labores.culturales",
@@ -750,10 +967,10 @@ nation.input.averages <- apply(inputs.df[, tractor.columns], 2, FUN=function(x) 
 for (target.input in tractor.columns ) {
 
   inputs.df[, paste0(target.input, ".impute.level")] <- NA
-  
+
 #  inputs.df[inputs.df[, target.input]!=0, paste0(target.input, ".impute.level")] <- "itself"
 
-impute.levels <- c("household", "segmento.full", "sector.full", "canton.full", 
+impute.levels <- c("household", "segmento.full", "sector.full", "canton.full",
   "seccion.full", "provincia.full", "departamento", "nation")
 
 
@@ -761,7 +978,7 @@ imputed.data.ls<- vector(mode = "list", length = nrow(inputs.df))
 
 inputs.df[ , target.input]
 
-obs.to.include <- which(inputs.df$exact.plot.tractor.hrs==0 & 
+obs.to.include <- which(inputs.df$exact.plot.tractor.hrs==0 &
   inputs.df[ , corresponding.input[target.input==tractor.columns] ] == "Maq. Agricola" )
 
 inputs.df[inputs.df$exact.plot.tractor.hrs!=0, paste0(target.input, ".impute.level")] <- "itself"
@@ -774,52 +991,52 @@ for (i in obs.to.include) {
 for (impute.level in impute.levels) {
 
 
-  if (impute.level=="nation") { 
+  if (impute.level=="nation") {
 #   stop("reached nation level")
     imputed.data.ls[[i]] <- c(unname(nation.input.averages[target.input]), impute.level)
     break
   }
-  
+
 #  if (impute.level=="itself") {
 #    if ( inputs.df$x19.nro.lote[i]!= inputs.df[ 1, "x104.indique.el.número.de.jornales.u.hrs.tractor"] )
 #      next
 #    }
-  
-  
-  
-  
+
+
+
+
   if(impute.level=="household") {
-    impute.data <- inputs.df[ inputs.df$folio==inputs.df$folio[i] & 
+    impute.data <- inputs.df[ inputs.df$folio==inputs.df$folio[i] &
          inputs.df[, paste0(target.input, ".impute.level")] %in% "itself" , target.input]
-    impute.data <- impute.data / inputs.df[ inputs.df$folio==inputs.df$folio[i] & 
+    impute.data <- impute.data / inputs.df[ inputs.df$folio==inputs.df$folio[i] &
          inputs.df[, paste0(target.input, ".impute.level")] %in% "itself" , "x19.superficie.cultivada.hectareas"]
-         
+
   } else {
-    impute.data <- inputs.df[ inputs.df[, impute.level] == inputs.df[i, impute.level] & 
+    impute.data <- inputs.df[ inputs.df[, impute.level] == inputs.df[i, impute.level] &
          inputs.df[, paste0(target.input, ".impute.level")] %in% "itself" , target.input]
-    impute.data <- impute.data / inputs.df[ inputs.df[, impute.level] == inputs.df[i, impute.level] & 
+    impute.data <- impute.data / inputs.df[ inputs.df[, impute.level] == inputs.df[i, impute.level] &
          inputs.df[, paste0(target.input, ".impute.level")] %in% "itself" , "x19.superficie.cultivada.hectareas"]
   }
-  
+
   impute.data <- impute.data[impute.data!=0]
-  
+
   if (impute.level=="household" && length(impute.data)>0  ) {
-    
+
     imputed.data.ls[[i]] <- c(impute.mean.or.median( impute.data ), "household")
      break
   }
   if (impute.level=="household") {next}
 
-  
+
   if (length(impute.data) >= 3) {
     imputed.data.ls[[i]] <- c(impute.mean.or.median( impute.data ), impute.level)
     break
   }
-  
+
 }
- 
+
  cat(i, "\n")
-  
+
 }
 
 temp.imputed.df <- data.frame(matrix(unlist(imputed.data.ls), ncol=2, byrow=TRUE), stringsAsFactors=FALSE)
@@ -827,24 +1044,24 @@ temp.imputed.df[, 1] <- as.numeric(temp.imputed.df[, 1])
 #temp.imputed.df[, 3] <- as.numeric(temp.imputed.df[, 3])
 #temp.imputed.df[, 4] <- as.numeric(temp.imputed.df[, 4])
 
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), target.input] <- 
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), target.input] <-
   temp.imputed.df[, 1]
 
-inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
   paste0(target.input, ".impute.level") ] <- temp.imputed.df[, 2]
 
-#inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+#inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
 #  paste0(target.input, ".impute.n.obs") ] <- temp.imputed.df[, 2]
 
-#inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ), 
+#inputs.df[sapply(imputed.data.ls, FUN= function(x) length(x)>0 ),
 #  paste0(target.input, ".impute.sd") ] <- temp.imputed.df[, 3]
-  
+
 }
 
 
 for (target.input in tractor.columns ) {
-  inputs.df[! inputs.df$exact.plot.tractor.hrs>0, target.input] <- 
-    inputs.df[! inputs.df$exact.plot.tractor.hrs>0, target.input] * 
+  inputs.df[! inputs.df$exact.plot.tractor.hrs>0, target.input] <-
+    inputs.df[! inputs.df$exact.plot.tractor.hrs>0, target.input] *
     inputs.df$x19.superficie.cultivada.hectareas[! inputs.df$exact.plot.tractor.hrs>0]
 }
 
@@ -862,16 +1079,16 @@ for (k in tractor.columns ) {
 
 inputs.df$tractor.hrs.final <- rowSums( inputs.df[, tractor.columns], na.rm=TRUE )
 
-inputs.df$tractor.hrs.final[inputs.df$exact.plot.tractor.hrs>0] <- 
+inputs.df$tractor.hrs.final[inputs.df$exact.plot.tractor.hrs>0] <-
   inputs.df$exact.plot.tractor.hrs[inputs.df$exact.plot.tractor.hrs>0]
 
 
 
-table( 
+table(
 inputs.df[ , corresponding.input[1] ] == "Maq. Agricola" |
 inputs.df[ , corresponding.input[2] ] == "Maq. Agricola" |
 inputs.df[ , corresponding.input[3] ] == "Maq. Agricola" |
-inputs.df[ , corresponding.input[4] ] == "Maq. Agricola" 
+inputs.df[ , corresponding.input[4] ] == "Maq. Agricola"
 )
 
 # inputs.df.save.2 <- inputs.df
@@ -880,10 +1097,10 @@ inputs.df[ , corresponding.input[4] ] == "Maq. Agricola"
 
 
 
-summary(inputs.df[, c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abono.bs.kg", 
-  "x19.plagicidas.bs.kg", "hourly.wage", "hourly.tractor.rental", 
-  "x19.fertilizante.cantidad.kg", "x19.sem.comprada.cantidad.kg", "x19.abono.cantidad.kg", 
-  "x19.plagicidas.cantidad.kg", "tractor.hrs.final", "x19.produccion.obtenidad.kg", 
+summary(inputs.df[, c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abono.bs.kg",
+  "x19.plagicidas.bs.kg", "hourly.wage", "hourly.tractor.rental",
+  "x19.fertilizante.cantidad.kg", "x19.sem.comprada.cantidad.kg", "x19.abono.cantidad.kg",
+  "x19.plagicidas.cantidad.kg", "tractor.hrs.final", "x19.produccion.obtenidad.kg",
   "x19.superficie.cultivada.hectareas", "x19.uso.riego", "ag.fam.labor.equiv.spread") ]
 )
 
@@ -898,28 +1115,28 @@ nation.input.averages.tractor <- apply(inputs.df[, c("hourly.tractor.rental"), d
 inputs.df$hourly.tractor.rental[is.na(inputs.df$hourly.tractor.rental)] <- nation.input.averages.tractor
 # Ok, so this has no effect, since all of them were imputed at a higher level
 
-for ( i in c("x19.fertilizante.cantidad.kg", "x19.sem.comprada.cantidad.kg", 
+for ( i in c("x19.fertilizante.cantidad.kg", "x19.sem.comprada.cantidad.kg",
   "x19.abono.cantidad.kg", "x19.plagicidas.cantidad.kg", "tractor.hrs.final") ) {
   print(mean(is.na(inputs.df[, i])))
   inputs.df[ is.na(inputs.df[, i]) , i] <- 0
-  
+
 }
 
 # inputs.df.save.2 <- inputs.df
 
 inputs.df <- inputs.df[inputs.df$x19.produccion.obtenidad.kg>0 &
-  !is.na(inputs.df$x19.produccion.obtenidad.kg), ] 
+  !is.na(inputs.df$x19.produccion.obtenidad.kg), ]
 # This removes crop failures. This reduces number of observations by 3,000, so about 11% of the observations
 # Only 5 NA's. the rest are zeros
 # head(inputs.df[inputs.df$x19.produccion.obtenidad.kg==0, ])
-# head(inputs.df[inputs.df$x19.produccion.obtenidad.kg==0, c("x19.fertilizante.cantidad.kg", "x19.fertilizante.bs.kg.impute.level")]) 
+# head(inputs.df[inputs.df$x19.produccion.obtenidad.kg==0, c("x19.fertilizante.cantidad.kg", "x19.fertilizante.bs.kg.impute.level")])
 # inputs.df[, c("x19.fertilizante.cantidad.kg", "x19.fertilizante.bs.kg.impute.level")]
 
 
-summary(inputs.df[, c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abono.bs.kg", 
-  "x19.plagicidas.bs.kg", "hourly.wage", "hourly.tractor.rental", 
-  "x19.fertilizante.cantidad.kg", "x19.sem.comprada.cantidad.kg", "x19.abono.cantidad.kg", 
-  "x19.plagicidas.cantidad.kg", "tractor.hrs.final", "x19.produccion.obtenidad.kg", 
+summary(inputs.df[, c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abono.bs.kg",
+  "x19.plagicidas.bs.kg", "hourly.wage", "hourly.tractor.rental",
+  "x19.fertilizante.cantidad.kg", "x19.sem.comprada.cantidad.kg", "x19.abono.cantidad.kg",
+  "x19.plagicidas.cantidad.kg", "tractor.hrs.final", "x19.produccion.obtenidad.kg",
   "x19.superficie.cultivada.hectareas", "x19.uso.riego", "ag.fam.labor.equiv.spread") ]
 )
 
@@ -966,6 +1183,7 @@ pob.shp<-importShapefile(paste0(work.dir, "centros_poblados.zip Folder/centros_p
 
 
 pob.shp$canton.full <- with(pob.shp , paste0(DEPTO, PROVIN, SECCION, CANTON))
+# SECCION = Municipio
 
 pob.shp$comunidad.id<-substr(pob.shp$COD_BD_CEN, 1, 11)
 
@@ -996,7 +1214,7 @@ library("maptools")
 #roads.shp.2<-readShapeSpatial(paste0(work.dir, "roads.shp"))
 
 #system.time( test <- dist2Line(village.geog.df[1, c("X", "Y"), drop=FALSE], roads.shp.2, distfun=distHaversine) )
-# distHaversine seems to be a nightmare, i.e. would take 40 hrs, so don't do it 
+# distHaversine seems to be a nightmare, i.e. would take 40 hrs, so don't do it
 
 #system.time( replicate(1000, distCosine(c(0,0),c(90,90))))
 #system.time( replicate(1000, distHaversine(c(0,0),c(90,90))))
@@ -1061,7 +1279,7 @@ villages.to.roads.df<-do.call(rbind, villages.to.roads.ls)
 village.geog.df<-cbind(village.geog.df, villages.to.roads.df)
 
 dist.to.road.v <- distHaversine(village.geog.df[, c("X", "Y")], village.geog.df[, c("X.on.road", "Y.on.road")]) / 1000 # Because this is in meters. Want to covert to km
-# This seems to get the same answers as the much-more-computationally-intensive dist2Line(village.geog.df[, c("X", "Y"), drop=FALSE], roads.shp.2, distfun=distHaversine) 
+# This seems to get the same answers as the much-more-computationally-intensive dist2Line(village.geog.df[, c("X", "Y"), drop=FALSE], roads.shp.2, distfun=distHaversine)
 
 dist.to.road.df <- data.frame(canton.full=village.geog.df$canton.full, dist.to.road=dist.to.road.v, stringsAsFactors=FALSE)
 
@@ -1077,7 +1295,7 @@ system.time(
     min.index<- which.min(
       colSums((t(as.matrix(roads.shp$ends[, c("x0", "y0")])) - center[c("X", "Y")])^2)^.5
     )
-    
+
     data.frame(
       EID=center["EID"],
       dist.to.road=colSums((t(as.matrix(roads.shp$ends[min.index, c("x0", "y0")])) - center[c("X", "Y")])^2)^.5,
@@ -1125,13 +1343,13 @@ gather.mapquest<-TRUE
 # http://open.mapquestapi.com/directions/#matrixSample
 # But really, it looks like it is only really 25
 # Ok, this explains why it is really set to 25:
-# "Route matrix methods use what is called multi-destination path search. It expands from 
-# the origin location and marks each destination it finds. This search gets more expensive 
-# as the distance from the origin location increases, so the search is limited by a setting 
-# called MaxMatrixSearchTime. 
-# This is set to 180 minutes. Any destinations that lie outside this limit are found using 
-# regular "point to point" routes. However, the server limits the number of outlying 
-# locations (outside the MaxMatrixSearch limit) with a setting called MaxMatrixPointToPoint. 
+# "Route matrix methods use what is called multi-destination path search. It expands from
+# the origin location and marks each destination it finds. This search gets more expensive
+# as the distance from the origin location increases, so the search is limited by a setting
+# called MaxMatrixSearchTime.
+# This is set to 180 minutes. Any destinations that lie outside this limit are found using
+# regular "point to point" routes. However, the server limits the number of outlying
+# locations (outside the MaxMatrixSearch limit) with a setting called MaxMatrixPointToPoint.
 # This value is set to 25."
 # NOTE TO SELF: So then if the time it takes to drive to the first destination is greater than 180
 # minutes, then it is all point-to-point
@@ -1153,78 +1371,78 @@ for (village in 1:nrow(village.geog.df)) {
   time.calcs.final.cols <- c()
 
   for (settlement.type in list(c("0-Capital", "1-Urbana"), "2-Amanzanada")) {
-  
+
     if ( pob.shp$CAT_LOC[pob.shp$EID==village.geog.df$EID[village]] %in% settlement.type ) {
       time.calcs.final.cols <- c(time.calcs.final.cols, 0)
       next
     }
-    
-  
+
+
     urban.coords<-pob.shp.on.roads[pob.shp.on.roads$CAT_LOC %in% settlement.type, c("X.on.road", "Y.on.road")]
-    
+
     target.knn<-knearneigh(as.matrix(rbind(target.village, urban.coords ) ), k=96,  longlat = TRUE)
     target.knn<-knn2nb(target.knn)[[1]] - 1
-    
+
     time.calcs<-c()
     time.calcs.final.v<-c()
-    
+
 #    for (coord.chunk in list(1:24, 25:48, 49:72, 73:96)) {
     for (coord.chunk in list(1:23)) {
-    
+
       reversed.urban.coords <- urban.coords[target.knn[coord.chunk], ]
       reversed.urban.coords <- reversed.urban.coords[nrow(reversed.urban.coords):1, ]
-      # This should help with the "multi-destination path search" issue, since the 
+      # This should help with the "multi-destination path search" issue, since the
       # farthest-away point is now first
-    
+
       target.coords<-rbind(target.village, reversed.urban.coords, la.paz.coords )
       time.calcs <- list()
-      
+
       for (direction.option in c("false", "true")) {
-      
+
         json.req<-toJSON(list(locations=paste(target.coords$Y.on.road, target.coords$X.on.road, sep="," ),
           options=list(allToAll="false", manyToOne=direction.option, MaxMatrixSearchTime=500))) # MaxMatrixSearchTime has no effect, BTW
-          
-        post.receipt<-POST(paste0("http://open.mapquestapi.com/directions/v2/routematrix?key=", 
+
+        post.receipt<-POST(paste0("http://open.mapquestapi.com/directions/v2/routematrix?key=",
           mapquest.api.key), config=accept_json(), body=json.req)
-          
+
         content(post.receipt)
-          
+
         time.calcs[[direction.option]]<-unlist(content(post.receipt)$time[-1])
-        
+
        }
-       
+
        time.calcs[[1]][ time.calcs[[1]]==0] <- 99999999999
        time.calcs[[2]][ time.calcs[[2]]==0] <- 99999999999
-       
-       
-       time.calcs.final.v<- c(time.calcs.final.v, 
+
+
+       time.calcs.final.v<- c(time.calcs.final.v,
          unlist(time.calcs[[1]][-length(time.calcs[[1]])] + time.calcs[[2]][-length(time.calcs[[2]])]) )
          # [-length(time.calcs[[1]])] takes out La Paz
-       
+
     }
-    
+
     time.calcs.final.cols <- c(time.calcs.final.cols, min(time.calcs.final.v))
-    
+
     if (settlement.type == "2-Amanzanada") {
       amanzanada.23.list[[village]] <- time.calcs.final.v
     } else {
       urban.23.list[[village]] <- time.calcs.final.v
     }
-    
-    
+
+
   }
-  
-  time.calcs.final.cols <- c(time.calcs.final.cols, 
+
+  time.calcs.final.cols <- c(time.calcs.final.cols,
     unlist(time.calcs[[1]][length(time.calcs[[1]])] + time.calcs[[2]][length(time.calcs[[2]])]))
   # This gets La Paz
-  
-  drive.time.data.ls[[village]]<-data.frame(comunidad.id=village.geog.df$comunidad.id[village], 
+
+  drive.time.data.ls[[village]]<-data.frame(comunidad.id=village.geog.df$comunidad.id[village],
     drive.time.urban=time.calcs.final.cols[1], drive.time.amanzanada=time.calcs.final.cols[2],
     drive.time.la.paz=time.calcs.final.cols[3],
     stringsAsFactors=FALSE)
-    
+
   cat(village.geog.df$comunidad.id[village], village, nrow(village.geog.df), date(), unlist(content(post.receipt)$info$messages), sep="\n")
-    
+
 
 }
 
@@ -1264,8 +1482,8 @@ colnames(urban.23.mat) <- paste0("drive.time.urban.rank.", 1:23)
 urban.23.list.3 <- lapply(urban.23.list, FUN=function(x) {
   if (is.null(x)) return(rep(NA, 5))
   x <- (x/60)/60
-  # express in terms of hrs  
-  c(sum(x<=2), sum(x<=4), sum(x<=8), sum(x<=16), sum(x<=32))  
+  # express in terms of hrs
+  c(sum(x<=2), sum(x<=4), sum(x<=8), sum(x<=16), sum(x<=32))
 } )
 
 urban.23.mat.3 <- matrix(unlist(urban.23.list.3), ncol=5, byrow=TRUE)
@@ -1276,8 +1494,8 @@ urban.23.df.3 <- as.data.frame(urban.23.mat.3)
 amanzanada.23.list.3 <- lapply(amanzanada.23.list, FUN=function(x) {
   if (is.null(x)) return(rep(NA, 5))
   x <- (x/60)/60
-  # express in terms of hrs  
-  c(sum(x<=1), sum(x<=2), sum(x<=4), sum(x<=8), sum(x<=16))  
+  # express in terms of hrs
+  c(sum(x<=1), sum(x<=2), sum(x<=4), sum(x<=8), sum(x<=16))
 } )
 
 amanzanada.23.mat.3 <- matrix(unlist(amanzanada.23.list.3), ncol=5, byrow=TRUE)
@@ -1319,7 +1537,7 @@ cantons.to.scramble <- sample(unique(test.inputs.df$canton.full))
 test.inputs.df$scrambled.cantons <- NA
 for ( i in 1:length(unique(test.inputs.df$canton.full))) {
   test.inputs.df$scrambled.cantons[test.inputs.df$canton.full==unique(test.inputs.df$canton.full)[i] ] <- cantons.to.scramble[i]
-  # Must do this so that we don't over-write as we are cycling through 
+  # Must do this so that we don't over-write as we are cycling through
 }
 # test.inputs.df[, c("canton.full", "scrambled.cantons")]
 test.inputs.df$canton.full <- test.inputs.df$scrambled.cantons
@@ -1401,7 +1619,7 @@ summary(lm( log(x19.fertilizante.bs.kg ) ~ cities.within.2.hrs + I(cities.within
  # I(100*prop.canton.buying.fert) +
   drive.time.amanzanada,
   data=test.inputs.df, subset= x19.fertilizante.cantidad.kg > 0 & x19.fertilizante.bs.kg.impute.level=="itself") )
-  
+
 # summary(lm( log(x19.fertilizante.bs.kg ) ~ cities.within.2.hrs + I(cities.within.4.hrs-cities.within.2.hrs)  +
 #  I(cities.within.8.hrs-cities.within.4.hrs) + I(cities.within.16.hrs-cities.within.8.hrs) +
 #  I(cities.within.32.hrs-cities.within.16.hrs) +
@@ -1415,11 +1633,11 @@ summary(lm( log(x19.fertilizante.bs.kg ) ~ cities.within.2.hrs + I(cities.within
   I(cities.within.32.hrs-cities.within.16.hrs) +
   towns.within.1.hrs + I(towns.within.2.hrs-towns.within.1.hrs) + I(towns.within.4.hrs-towns.within.2.hrs)  +
   I(towns.within.8.hrs-towns.within.4.hrs) + I(towns.within.16.hrs-towns.within.8.hrs) +
-  dist.to.road + drive.time.la.paz 
+  dist.to.road + drive.time.la.paz
  # I(100*prop.canton.buying.fert) +
   ,
   data=test.inputs.df, subset= x19.fertilizante.cantidad.kg > 0 & x19.fertilizante.bs.kg.impute.level=="itself") )
-  
+
 
 # x19.codigo really adds nothing
 # R square with model above (without prop.buying.fert) when cantons are scrambled is 0.009159.  This
@@ -1443,8 +1661,8 @@ summary(lm( log(x19.plagicidas.bs.kg ) ~ cities.within.2.hrs + I(cities.within.4
   I(100*prop.canton.buying.plagicidas) +
   drive.time.amanzanada,
   data=test.inputs.df, subset= x19.plagicidas.bs.kg.impute.level=="itself") )
-  
-  
+
+
 summary(lm( log(hourly.wage ) ~ cities.within.2.hrs + I(cities.within.4.hrs-cities.within.2.hrs)  +
   I(cities.within.8.hrs-cities.within.4.hrs) + I(cities.within.16.hrs-cities.within.8.hrs) +
   I(cities.within.32.hrs-cities.within.16.hrs) +
@@ -1494,13 +1712,13 @@ summary(lm( log(x19.sem.comprada.bs.kg ) ~ cities.within.2.hrs + I(cities.within
 
 
 
-summary(lm( log(x19.fertilizante.bs.kg ) ~ drive.time.urban.rank.1 +  drive.time.urban.rank.2 +  drive.time.urban.rank.3 + 
- drive.time.urban.rank.4 +  drive.time.urban.rank.5 +  drive.time.urban.rank.6 +  drive.time.urban.rank.7 +  drive.time.urban.rank.8 + 
+summary(lm( log(x19.fertilizante.bs.kg ) ~ drive.time.urban.rank.1 +  drive.time.urban.rank.2 +  drive.time.urban.rank.3 +
+ drive.time.urban.rank.4 +  drive.time.urban.rank.5 +  drive.time.urban.rank.6 +  drive.time.urban.rank.7 +  drive.time.urban.rank.8 +
   drive.time.urban.rank.9 +  drive.time.urban.rank.10 +  drive.time.urban.rank.11 +  drive.time.urban.rank.12,
   data=test.inputs.df, subset= x19.fertilizante.cantidad.kg > 0 & x19.fertilizante.bs.kg.impute.level=="itself") )
 
-summary(lm( log(x19.fertilizante.bs.kg ) ~ drive.time.urban.rank.1 +  drive.time.urban.rank.2 +  drive.time.urban.rank.3 + 
- drive.time.urban.rank.4 +  drive.time.urban.rank.5 +  drive.time.urban.rank.6 +  drive.time.urban.rank.7 +  drive.time.urban.rank.8 + 
+summary(lm( log(x19.fertilizante.bs.kg ) ~ drive.time.urban.rank.1 +  drive.time.urban.rank.2 +  drive.time.urban.rank.3 +
+ drive.time.urban.rank.4 +  drive.time.urban.rank.5 +  drive.time.urban.rank.6 +  drive.time.urban.rank.7 +  drive.time.urban.rank.8 +
   drive.time.urban.rank.9 +  drive.time.urban.rank.10 +  drive.time.urban.rank.11 +  drive.time.urban.rank.12 +
    drive.time.urban.rank.13 +  drive.time.urban.rank.14 +  drive.time.urban.rank.15 +  drive.time.urban.rank.16 ,
   data=test.inputs.df, subset= x19.fertilizante.cantidad.kg > 0 & x19.fertilizante.bs.kg.impute.level=="itself") )
@@ -1562,7 +1780,7 @@ summary(lm( log(x19.fertilizante.bs.kg ) ~ I(100*prop.canton.buying.fert),
 
 summary(lm( log(x19.fertilizante.bs.kg ) ~ I(100*prop.canton.buying.fert)*num.hh.canton,
   data=test.inputs.df, subset= x19.fertilizante.cantidad.kg > 0 & x19.fertilizante.bs.kg.impute.level=="itself") )
-  
+
 
 summary(lm( log(x19.fertilizante.bs.kg ) ~ I(100*prop.canton.buying.fert):num.hh.canton,
   data=test.inputs.df, subset= x19.fertilizante.cantidad.kg > 0 & x19.fertilizante.bs.kg.impute.level=="itself") )
@@ -1598,10 +1816,10 @@ summary(lm( log(x19.fertilizante.bs.kg ) ~ drive.time.amanzanada,
 
 summary(lm( log(x19.fertilizante.bs.kg ) ~ drive.time.la.paz ,
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
-  
+
 summary(lm( log(x19.fertilizante.bs.kg ) ~ dist.to.road,
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
-  
+
 summary(lm( log(x19.fertilizante.bs.kg ) ~ (dist.to.road + drive.time.urban + drive.time.amanzanada + drive.time.la.paz)^4 +
  I(dist.to.road^2) + I(drive.time.urban^2) + I(drive.time.amanzanada^2) + I(drive.time.la.paz^2),
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
@@ -1622,10 +1840,10 @@ summary(lm( x19.fertilizante.bs.kg  ~ drive.time.amanzanada,
 
 summary(lm( x19.fertilizante.bs.kg  ~ drive.time.la.paz ,
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
-  
+
 summary(lm( x19.fertilizante.bs.kg  ~ dist.to.road ,
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
-  
+
 
 summary(lm( log(x19.fertilizante.bs.kg ) ~ log(drive.time.urban+1),
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
@@ -1638,12 +1856,12 @@ summary(lm( log(x19.fertilizante.bs.kg ) ~ log(drive.time.la.paz + 1) ,
 
 summary(lm( log(x19.fertilizante.bs.kg ) ~ log(dist.to.road) ,
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
-  
-  
-  
+
+
+
 summary(lm( log(x19.fertilizante.bs.kg ) ~ drive.time.urban*seccion.full,
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
-  
+
 summary(lm( log(x19.fertilizante.bs.kg ) ~ seccion.full,
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )
 
@@ -1660,11 +1878,11 @@ length(coef(lm( log(x19.fertilizante.bs.kg ) ~ canton.full,
 
 sum(!is.na(coef(lm( log(x19.fertilizante.bs.kg ) ~ drive.time.urban*seccion.full,
   data=test.inputs.df, subset= x19.fertilizante.bs.kg > 0) )))
-  
-  
+
+
 for ( targ.input in c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abono.bs.kg", "x19.plagicidas.bs.kg")) {
   print(summary(lm( I(log( get(targ.input ))) ~ drive.time.urban,
-    data=test.inputs.df, subset= get(targ.input ) > 0) )) 
+    data=test.inputs.df, subset= get(targ.input ) > 0) ))
 }
 
 
@@ -1722,7 +1940,7 @@ pob.shp<-importShapefile(paste0(work.dir, "centros_poblados.zip Folder/centros_p
 #table(pob.shp.rev$CAT_LOC)
 #simplified.loc.cat <- as.character(pob.shp.rev$CAT_LOC)
 #simplified.loc.cat[simplified.loc.cat == "0-Capital"] <- "1-Urbana"
-#simplified.loc.cat[simplified.loc.cat == "3-Dispersa"] <- "3-7Dispersa"  
+#simplified.loc.cat[simplified.loc.cat == "3-Dispersa"] <- "3-7Dispersa"
 #aggregate( pob.shp.rev$POB2001, by=list(simplified.loc.cat), FUN=median, na.rm=TRUE)
 
 
@@ -1745,8 +1963,8 @@ soil.qual.asc <- read.asc("/Users/travismcarthur/Desktop/From old comp/Metrics (
 #cells.dim: integer; vector with number of cells in each dimension
 
 soil.qual.grid.defn <- GridTopology(cellcentre.offset=
-  c(attr(soil.qual.asc,  "xll"), attr(soil.qual.asc,  "yll")), 
-  cellsize=rep(attr(soil.qual.asc,  "cellsize"), 2), 
+  c(attr(soil.qual.asc,  "xll"), attr(soil.qual.asc,  "yll")),
+  cellsize=rep(attr(soil.qual.asc,  "cellsize"), 2),
   cells.dim= rev(dim(soil.qual.asc))) # ok, this should be rev() by evidence in soil.bil@grid. This is crucial
 
 soil.qual.SP <- SpatialPixels(
@@ -1842,11 +2060,11 @@ mean.soil.qual <- mean(pob.shp$soil.qual, na.rm=TRUE)
 
 pob.shp$soil.qual[is.na(pob.shp$soil.qual)] <- mean.soil.qual
 
-soil.agg.v <- by(pob.shp[, c("soil.qual", "VIVIENDA")], INDICES=list(pob.shp$canton.full), 
+soil.agg.v <- by(pob.shp[, c("soil.qual", "VIVIENDA")], INDICES=list(pob.shp$canton.full),
   FUN=function(x) {
     weighted.mean(x[, 1], x[, 2], na.rm=TRUE)
   }
-) 
+)
 
 soil.agg.df <- data.frame(soil.quality = unclass(soil.agg.v), canton.full=attr(soil.agg.v, "dimnames")[[1]])
 
@@ -1897,7 +2115,7 @@ keep.coords.2<-point.in.polygon(pob.shp$X , pob.shp$Y, bboxx(bbox(elev.dem2))[, 
 villages.elev.2.spatialpixels<-SpatialPixels(
   SpatialPoints(as.data.frame(pob.shp[keep.coords.2, c("X", "Y")])),
   grid=elev.dem2@grid)
-  
+
 
 
 
@@ -1916,11 +2134,11 @@ mean.elevation <- mean(pob.shp$elevation, na.rm=TRUE)
 
 pob.shp$elevation[is.na(pob.shp$elevation)] <- mean.elevation
 
-elevation.agg.v <- by(pob.shp[, c("elevation", "VIVIENDA")], INDICES=list(pob.shp$canton.full), 
+elevation.agg.v <- by(pob.shp[, c("elevation", "VIVIENDA")], INDICES=list(pob.shp$canton.full),
   FUN=function(x) {
     weighted.mean(x[, 1], x[, 2], na.rm=TRUE)
   }
-) 
+)
 
 elevation.agg.df <- data.frame(elevation = unclass(elevation.agg.v), canton.full=attr(elevation.agg.v, "dimnames")[[1]])
 
@@ -1947,9 +2165,9 @@ library("sp")
 
 
 
-precip.coords<-read.fortran(paste0(work.dir, "Global2011P/precip.2000"), 
+precip.coords<-read.fortran(paste0(work.dir, "Global2011P/precip.2000"),
   format=c("F8.3", "F8.3", "12F8.1"))[, c(1,2)]
-  
+
 precip.coords[,1]<-precip.coords[,1]*1000
 precip.coords[,2]<-precip.coords[,2]*1000
 
@@ -1960,9 +2178,9 @@ target.precip.years <- 2001:2006
 precip.ls<-list()
 
 for ( i in as.character(target.precip.years)) {
-  precip.ls[[i]]<-read.fortran(paste0(work.dir, "Global2011P/precip.", i), 
+  precip.ls[[i]]<-read.fortran(paste0(work.dir, "Global2011P/precip.", i),
     format=c("F8.3", "F8.3", "12F8.1"))[, -c(1,2)]
-    
+
 }
 
 #TODO: REALLY UNCLEAR ABOUT THE SCALE of rainfall values. MAY HAVE TO MULTIPLY THesE VALUES TO GET RIGHT SCALE. http://climate.geog.udel.edu/~climate/html_pages/Global2011/Precip_revised_3.02/README.GlobalTsP2011.html
@@ -1975,9 +2193,9 @@ for ( i in 2:length(precip.years) ) {
 
   precip.temp.1<-precip.ls[[precip.years[i-1]]]
   precip.temp.2<-precip.ls[[precip.years[i]]]
-  precip.disag.ls[[ paste0("rain.grow.season.", precip.years[i])]] <- 
+  precip.disag.ls[[ paste0("rain.grow.season.", precip.years[i])]] <-
     rowSums(precip.temp.1[, 10:12]) + rowSums(precip.temp.1[, 1:4])
-  # NOTE: This only gets the rain during the growing season, which actually 
+  # NOTE: This only gets the rain during the growing season, which actually
 }
 
 
@@ -1990,13 +2208,13 @@ precip.df<-rowSums(precip.df)/(length(target.precip.years))
 #all(precip.ls[[1]][,1]==precip.ls[[2]][,1] &
 #  precip.ls[[1]][,1]==precip.ls[[3]][,1] &
 #  precip.ls[[1]][,1]==precip.ls[[4]][,1] &
-#  precip.ls[[1]][,1]==precip.ls[[5]][,1] 
+#  precip.ls[[1]][,1]==precip.ls[[5]][,1]
 #)
 
 #all(precip.ls[[1]][,2]==precip.ls[[2]][,2] &
 #  precip.ls[[1]][,2]==precip.ls[[3]][,2] &
 #  precip.ls[[1]][,2]==precip.ls[[4]][,2] &
-#  precip.ls[[1]][,2]==precip.ls[[5]][,2] 
+#  precip.ls[[1]][,2]==precip.ls[[5]][,2]
 #)
 # This test is passed
 
@@ -2033,11 +2251,11 @@ mean.rainfall <- mean(pob.shp$mean.ann.rain.5yr, na.rm=TRUE)
 
 pob.shp$mean.ann.rain.5yr[is.na(pob.shp$mean.ann.rain.5yr)] <- mean.rainfall
 
-rainfall.agg.v <- by(pob.shp[, c("mean.ann.rain.5yr", "VIVIENDA")], INDICES=list(pob.shp$canton.full), 
+rainfall.agg.v <- by(pob.shp[, c("mean.ann.rain.5yr", "VIVIENDA")], INDICES=list(pob.shp$canton.full),
   FUN=function(x) {
     weighted.mean(x[, 1], x[, 2], na.rm=TRUE)
   }
-) 
+)
 
 rainfall.agg.df <- data.frame(mean.ann.rain.5yr = unclass(rainfall.agg.v), canton.full=attr(rainfall.agg.v, "dimnames")[[1]])
 
@@ -2097,7 +2315,7 @@ save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/
 #x02 = firm.df$x19.sem.comprada.cantidad.kg
 #x03 = firm.df$x19.abono.cantidad.kg
 #x04 = firm.df$x19.plagicidas.cantidad.kg
-#x05 = firm.df$paid.hours.spread 
+#x05 = firm.df$paid.hours.spread
 #x06 = firm.df$x107.hrs.tractor.spread
 
 #y01 <- log( firm.df$x19.produccion.obtenidad.kg )
@@ -2109,17 +2327,3 @@ save(inputs.df, file="/Users/travismcarthur/Desktop/From old comp/Metrics (637)/
 
 #q03 = firm.df$ag.fam.labor.equiv.spread
 #q03[q03 == 0] = .5
-
-
-
-
-
-
-
-
-
-
-
-
-
-
