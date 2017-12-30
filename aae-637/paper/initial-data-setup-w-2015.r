@@ -192,7 +192,9 @@ library("splancs")
 
 
 
-pob.2016.shp <- importShapefile(paste0("/Users/travismcarthur/Downloads/POBLACIONES/POBLACIONES.shp"))
+pob.2016.shp <- importShapefile(paste0(work.dir, "POBLACIONES/POBLACIONES.shp"))
+# From https://geo.gob.bo/geonetwork/srv/esp/catalog.search#/metadata/ec0611d6-cf05-46d9-b861-f78562368e41
+
 pob.2016.shp$id_unico <- as.character(pob.2016.shp$id_unico)
 
 library("data.table")
@@ -204,6 +206,7 @@ trim.ids.ls <- list()
 for ( i in 1:max(nchar(pob.2016.dt$id_unico))) {
   trim.ids.ls[[i]] <- copy(pob.2016.dt)
   trim.ids.ls[[i]] <- trim.ids.ls[[i]][, id_unico := substr(id_unico, 1, i)]
+  pob.2016.shp[, paste0("id_unico_", formatC(i, width = 2, flag = "0"), "_char")] <- substr(pob.2016.shp$id_unico, 1, i)
 }
 
 pob.2016.dt <- rbindlist(trim.ids.ls)
@@ -221,6 +224,82 @@ comunidad.ids <- comunidad.ids[nchar(comunidad.ids) > 1]
 comunidad.ids.dt <- data.table(id_unico = comunidad.ids)
 
 comunidad.ids.dt <- merge(pob.2016.dt, comunidad.ids.dt)
+
+comunidad.ids.non.unique <- setdiff(comunidad.ids, comunidad.ids.dt$id_unico)
+
+table(nchar(comunidad.ids.non.unique ))
+
+comunidad.ids.dt[, duplicate := NULL]
+
+
+
+comunidad.ids.orig.df <- unique(hh.2.2015.df[!grepl("Censal", hh.2.2015.df$upm), "upm", drop = FALSE])
+
+comunidad.ids.orig.df$id_unico <- gsub("^0", "", gsub(".*Cod: [0-9]*-", "", gsub("(^ +)|( +$)", "", comunidad.ids.orig.df$upm)))
+# I know the above is redundant, but it's consistent with the above transformation to the comunidad.ids object
+
+comunidad.ids.orig.df <- merge(comunidad.ids.orig.df, comunidad.ids.dt, all.x = TRUE)
+
+
+hh.2.2015.only.geo.df <- unique(hh.2.2015.df[, c("id_departamento", "nombredepartamento", "id_provincia", "provincia",
+  "id_municipio", "municipio", "upm")])
+
+hh.2.2015.only.geo.df <- hh.2.2015.only.geo.df[ hh.2.2015.only.geo.df$upm %in%
+  comunidad.ids.orig.df$upm[is.na(comunidad.ids.orig.df$EID)], ]
+
+hh.2.2015.only.geo.df$manual.link.id <- 1:nrow(hh.2.2015.only.geo.df)
+
+
+write.csv(pob.2016.shp[! pob.2016.shp$EID %in% comunidad.ids.dt$EID, ], paste0(work.dir, "2015-data-geog-link/2016-pop-shp-for-linkage.csv"),
+  row.names = FALSE)
+
+write.csv(hh.2.2015.only.geo.df, paste0(work.dir, "2015-data-geog-link/2015-survey-ids-for-linkage.csv"),
+    row.names = FALSE)
+
+
+geog.manual.df <- read.csv(paste0(work.dir, "2015-data-geog-link/2015-survey-ids-for-linkage-working-copy-test.csv"), stringsAsFactors = FALSE)
+
+hh.2.2015.only.geo.df <- merge(hh.2.2015.only.geo.df, geog.manual.df[, c("manual.link.id", "EID")], all.x = TRUE)
+
+
+hh.2.2015.df$loc.combined <- paste0(hh.2.2015.df$nombredepartamento, hh.2.2015.df$provincia, hh.2.2015.df$municipio)
+
+hh.2.2015.df.test <- unique(hh.2.2015.df[, c("loc.combined", "upm")])
+
+table(table(hh.2.2015.df.test$loc.combined))
+
+
+pob.shp <-importShapefile(paste0(work.dir, "centros_poblados.zip Folder/centros_poblados.shp"))
+
+table(pob.shp$Y %in% pob.2016.shp$Y)
+
+comp.dist <- function(x) {
+  ret <- sqrt( (x$X - pob.shp$X)^2 + (x$Y - pob.shp$Y)^2 )
+  cat(min(ret)*100, "\n")
+  which.min(ret)
+}
+
+test.localidad <- 200
+pob.2016.shp[test.localidad, ]
+pob.shp[comp.dist(pob.2016.shp[test.localidad, c("X", "Y"), drop = FALSE]), ]
+
+
+sqrt(abs())
+
+# We will have some locations that we can only get municipios for, such as the Area Censal UPMs.
+# For price imputation, we will start at the muni level. For lat and long, we will go for
+# some method with the "best" cootdinates with pob.shp or something
+
+# The plan is to get the closest pob.shp village and adopt the canton of that village.
+# Then when it is time to impute prices, first get the closest village (by great circle distance) that has a price. Restrict
+# This search to only villages that are within the canton.
+# If there are no villages with a price that is within the canton, look at the muni level (muni level can come
+# from the original dataset).
+# Then continue on up the chain.
+
+
+
+
 
 
 
@@ -280,7 +359,7 @@ for ( i in grep("bs.quintal", colnames(inputs.df)) ) {
 
 
 
-geog.df<- read.spss(paste0(work.dir, "bd68/1-UBIGEO PRODUCTOR/1.-ENA08_BOLIVIA_UBIGEO_CONDICION_JURIDICA_SUPERFICIE_UPA(preg_1-17).sav"), to.data.frame=TRUE)
+geog.df <- read.spss(paste0(work.dir, "bd68/1-UBIGEO PRODUCTOR/1.-ENA08_BOLIVIA_UBIGEO_CONDICION_JURIDICA_SUPERFICIE_UPA(preg_1-17).sav"), to.data.frame=TRUE)
 
 colnames(geog.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(geog.df, "variable.labels")) ) )
 
