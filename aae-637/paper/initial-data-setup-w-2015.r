@@ -250,11 +250,8 @@ hh.2.2015.only.geo.df <- hh.2.2015.only.geo.df[ hh.2.2015.only.geo.df$upm %in%
 hh.2.2015.only.geo.df$manual.link.id <- 1:nrow(hh.2.2015.only.geo.df)
 
 
-write.csv(pob.2016.shp[! pob.2016.shp$EID %in% comunidad.ids.dt$EID, ], paste0(work.dir, "2015-data-geog-link/2016-pop-shp-for-linkage.csv"),
-  row.names = FALSE)
-
-write.csv(hh.2.2015.only.geo.df, paste0(work.dir, "2015-data-geog-link/2015-survey-ids-for-linkage.csv"),
-    row.names = FALSE)
+# write.csv(pob.2016.shp[! pob.2016.shp$EID %in% comunidad.ids.dt$EID, ], paste0(work.dir, "2015-data-geog-link/2016-pop-shp-for-linkage.csv"),  row.names = FALSE)
+# write.csv(hh.2.2015.only.geo.df, paste0(work.dir, "2015-data-geog-link/2015-survey-ids-for-linkage.csv"),    row.names = FALSE)
 
 
 geog.manual.df <- read.csv(paste0(work.dir, "2015-data-geog-link/2015-survey-ids-for-linkage-working-copy-test.csv"), stringsAsFactors = FALSE)
@@ -281,14 +278,53 @@ comp.dist <- function(x) {
 
 test.localidad <- 200
 pob.2016.shp[test.localidad, ]
-pob.shp[comp.dist(pob.2016.shp[test.localidad, c("X", "Y"), drop = FALSE]), ]
+pob.shp[comp.dist(str(pob.2016.shp)[test.localidad, c("X", "Y"), drop = FALSE]), ]
 
 
-sqrt(abs())
+
+comunidad.ids.orig.df <- comunidad.ids.orig.df[!is.na(comunidad.ids.orig.df$EID), ]
+
+hh.2.2015.unique.df <- unique(hh.2.2015.df[, c("id_departamento", "nombredepartamento",
+  "id_provincia", "provincia", "id_municipio", "municipio", "upm")])
+
+comunidad.ids.orig.df.initial.rows <- nrow(comunidad.ids.orig.df)
+
+comunidad.ids.orig.df <- merge(comunidad.ids.orig.df, hh.2.2015.unique.df, all.x = TRUE)
+
+stopifnot(comunidad.ids.orig.df.initial.rows == nrow(comunidad.ids.orig.df) )
+# Make sure that only matching on "upm" and not also "provincia", etc. will still result in a unique match
+
+hh.2.2015.only.geo.df$manual.link.id <- NULL
+comunidad.ids.orig.df$id_unico <- NULL
+
+hh.2.2015.only.geo.df <- rbind(hh.2.2015.only.geo.df, comunidad.ids.orig.df)
+# "It then takes the classes of the columns from the first data frame, and matches columns by name (rather than by position)."
+
+hh.2.2015.only.geo.df <- merge(hh.2.2015.only.geo.df, pob.2016.shp[, c("EID", "X", "Y")], all.x = TRUE)
+
+# The code above is sort of convoluted, since we are splitting, processing, and then merging back together
+
+# > table(grepl("Censal", hh.2.2015.only.geo.df$upm))
+# FALSE
+#  1251
+# There are additional observations in hh.2.2015.df that are not in hh.2.2015.only.geo.df since
+# "Censal" upm's were removed from hh.2.2015.only.geo.df
+
+hh.2.2015.only.geo.df <- merge(hh.2.2015.only.geo.df, unique(hh.2.2015.df[, c("id_departamento", "nombredepartamento",
+  "id_provincia", "provincia", "id_municipio", "municipio", "upm", "id_persona")]), all = TRUE)
+
+
+geog.2015.df <- hh.2.2015.only.geo.df
+
+prop.table(table(!is.na(geog.2015.df$X)))
+#    FALSE      TRUE
+# 0.4576407 0.5423593
+# 2018-01-08
+
 
 # We will have some locations that we can only get municipios for, such as the Area Censal UPMs.
 # For price imputation, we will start at the muni level. For lat and long, we will go for
-# some method with the "best" cootdinates with pob.shp or something
+# some method with the "best" coordinates with pob.shp or something
 
 # The plan is to get the closest pob.shp village and adopt the canton of that village.
 # Then when it is time to impute prices, first get the closest village (by great circle distance) that has a price. Restrict
@@ -342,7 +378,7 @@ for ( i in grep("obtenidad.quintal", colnames(inputs.df)) ) {
 for ( i in grep("bs.quintal", colnames(inputs.df)) ) {
   inputs.df[, gsub("bs.quintal", "bs.kg", colnames(inputs.df)[i]) ] <- inputs.df[, i] / 46
 }
-# Reciprocal since data is is Bolivianos per quintals
+# Reciprocal since data is in Bolivianos per quintals
 
 # Use below for Amelia
 #for ( i in grep("bs.quintal", colnames(inputs.df)) ) {
@@ -375,6 +411,14 @@ inputs.df <- merge(inputs.df, geog.df[, c("folio", "provincia.full",
 
 
 # Imputing input prices below
+
+#  _____ __  __ _____  _    _ _______ ______   _____  _____  _____ _____ ______  _____
+# |_   _|  \/  |  __ \| |  | |__   __|  ____| |  __ \|  __ \|_   _/ ____|  ____|/ ____|
+#   | | | \  / | |__) | |  | |  | |  | |__    | |__) | |__) | | || |    | |__  | (___
+#   | | | |\/| |  ___/| |  | |  | |  |  __|   |  ___/|  _  /  | || |    |  __|  \___ \
+#  _| |_| |  | | |    | |__| |  | |  | |____  | |    | | \ \ _| || |____| |____ ____) |
+# |_____|_|  |_|_|     \____/   |_|  |______| |_|    |_|  \_\_____\_____|______|_____/
+# "Big" font here: http://www.network-science.de/ascii/
 
 library("compiler")
 
@@ -678,7 +722,12 @@ for (k in input.price.columns ) {
 
 
 
-
+#  _               ____   ____  _____
+# | |        /\   |  _ \ / __ \|  __ \
+# | |       /  \  | |_) | |  | | |__) |
+# | |      / /\ \ |  _ <| |  | |  _  /
+# | |____ / ____ \| |_) | |__| | | \ \
+# |______/_/    \_\____/ \____/|_|  \_\
 
 
 
@@ -851,6 +900,12 @@ mano.obra.df <- merge( mano.obra.df, labor.aggregate, all=TRUE)
 mano.obra.df$ag.fam.labor.equiv.hrs <- mano.obra.df$multiplier.for.fam.labor * mano.obra.df$ag.fam.labor.equiv
 
 
+#  _______ _____            _____ _______ ____  _____
+# |__   __|  __ \     /\   / ____|__   __/ __ \|  __ \
+#    | |  | |__) |   /  \ | |       | | | |  | | |__) |
+#    | |  |  _  /   / /\ \| |       | | | |  | |  _  /
+#    | |  | | \ \  / ____ \ |____   | | | |__| | | \ \
+#    |_|  |_|  \_\/_/    \_\_____|  |_|  \____/|_|  \_\
 
 
 tractor.df <- read.spss(paste0(work.dir, "bd68/8-JORNALES Y MAQUINARIA/26.-ENA08_BOLIVIA_JORNALES_MAQUINARIA EMPLEADA_1C (preg_104-107).sav"), to.data.frame=TRUE)
@@ -1084,7 +1139,7 @@ for (impute.level in impute.levels) {
 
 
 
-  if(impute.level=="household") {
+  if (impute.level=="household") {
     impute.data <- inputs.df[ inputs.df$folio==inputs.df$folio[i] &
          inputs.df[, paste0(target.input, ".impute.level")] %in% "itself" , target.input]
     impute.data <- impute.data / inputs.df[ inputs.df$folio==inputs.df$folio[i] &
@@ -1227,6 +1282,13 @@ summary(inputs.df[, c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.a
 
 ######### BEGIN GEOG/SOIL WORK
 
+#   _____ ______ ____   _____   _____ _   _ _____  _    _ _______ _____
+#  / ____|  ____/ __ \ / ____| |_   _| \ | |  __ \| |  | |__   __/ ____|
+# | |  __| |__ | |  | | |  __    | | |  \| | |__) | |  | |  | | | (___
+# | | |_ |  __|| |  | | | |_ |   | | | . ` |  ___/| |  | |  | |  \___ \
+# | |__| | |___| |__| | |__| |  _| |_| |\  | |    | |__| |  | |  ____) |
+#  \_____|______\____/ \_____| |_____|_| \_|_|     \____/   |_| |_____/
+
 
 
 library("foreign")
@@ -1273,6 +1335,9 @@ village.geog.df <- do.call(rbind, by(village.geog.df, INDICES=list(village.geog.
 } )
 )
 # For now only using the village within the canton that has max population
+
+# OK, it is roughly here that I need to account for the fact that I already have lat and long
+# for some villages in 2015 survey.
 
 
 do.drive.time <- FALSE
@@ -2218,6 +2283,8 @@ elevation.agg.v <- by(pob.shp[, c("elevation", "VIVIENDA")], INDICES=list(pob.sh
     weighted.mean(x[, 1], x[, 2], na.rm=TRUE)
   }
 )
+
+# Ok this takes the weighted mean _after_ matching the data with each village
 
 elevation.agg.df <- data.frame(elevation = unclass(elevation.agg.v), canton.full=attr(elevation.agg.v, "dimnames")[[1]])
 
