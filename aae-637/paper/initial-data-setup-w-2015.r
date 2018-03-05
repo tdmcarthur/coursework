@@ -7,6 +7,8 @@ work.dir <- "/Users/travismcarthur/Desktop/Bolivia alloc paper/Final paper/"
 
 inputs.df<- read.spss(paste0(work.dir, "bd68/2-AGRICOLA/Cultivos (Preg-19)/2.-ENA08_BOLIVIA_CULTIVOS_PRODUCCION_INSUMOS(preg_19).sav"), to.data.frame=TRUE)
 
+colnames(inputs.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(inputs.df, "variable.labels")) ) )
+
 
 ag.2015.df <- read.spss(paste0(work.dir,  "bd67/BD Spss/2.-Agricola/agricola verano e invierno.sav"), to.data.frame = TRUE)
 
@@ -24,6 +26,7 @@ sort(table(ag.2015.df$cultiv))
 # prod	Produccion en quintales
 # riego	Esta bajo riego
 # cant_sem	Cantidad de semilla que utilizo
+# cum_sem	Unidad de medida de la semilla
 # tipo_sem	La semilla empleada fue
 # precio_sem	Precio de la semilla
 # cant_abo_org	cantidad de abono organico
@@ -154,6 +157,8 @@ hh.2.2015.df <- read.spss(paste0(work.dir,  "bd67/BD Spss/1.-Hogar/Hogar_parte2.
 
 hh.3.2015.df <- read.spss(paste0(work.dir,  "bd67/BD Spss/1.-Hogar/Hogar_parte3.sav"), to.data.frame = TRUE)
 
+
+
 # library("memisc")
 # data <- as.data.frame(as.data.set(spss.system.file(paste0(work.dir,  "bd67/BD Spss/1.-Hogar/Hogar_parte2.sav"))))
 # This above will avoid warnings: https://stackoverflow.com/questions/3136293/read-spss-file-into-r
@@ -278,7 +283,7 @@ comp.dist <- function(x) {
 
 test.localidad <- 200
 pob.2016.shp[test.localidad, ]
-pob.shp[comp.dist(str(pob.2016.shp)[test.localidad, c("X", "Y"), drop = FALSE]), ]
+pob.shp[comp.dist(pob.2016.shp[test.localidad, c("X", "Y"), drop = FALSE]), ]
 
 
 
@@ -322,35 +327,176 @@ prop.table(table(!is.na(geog.2015.df$X)))
 # 2018-01-08
 
 
+
+
+stopifnot(all(!duplicated(geog.2015.df$id_persona)))
+stopifnot(setequal(geog.2015.df$id_persona, geog.2015.df$id_persona))
+#names(geog.2015.df)[names(geog.2015.df) == "X"]  <- "lon"
+#names(geog.2015.df)[names(geog.2015.df) == "Y"]  <- "lat"
+
+#ag.2015.df <- merge(geog.2015.df[, c("id_persona", "upm", "lon", "lat")], ag.2015.df)
+
+library("rgeos")
+
+#system.time(test <- distGeo(matrix(runif(2000), ncol = 2), matrix(runif(200), ncol = 2)))
+
+pob.shp.sp <- SpatialPointsDataFrame(as.matrix(pob.shp[, c("X", "Y")]), as.data.frame(pob.shp[, "EID", drop = FALSE]))
+# Using as.data.frame() since it also has class EventData
+geog.2015.df$X.char <- as.character(geog.2015.df$X)
+geog.2015.df$Y.char <- as.character(geog.2015.df$Y)
+
+geog.2015.df.unique <- unique(geog.2015.df[!is.na(geog.2015.df$X), c("X", "Y", "X.char", "Y.char")])
+rownames(geog.2015.df.unique) <- NULL
+
+geog.2015.df.sp <- SpatialPointsDataFrame(as.matrix(geog.2015.df.unique[, c("X", "Y")]),
+   geog.2015.df.unique[, c("X.char", "Y.char"), drop = FALSE])
+
+system.time( geog.2015.to.pob.dist <- gDistance(geog.2015.df.sp, pob.shp.sp, byid = TRUE ) )
+
+geog.2015.to.pob.dist.min <- apply(geog.2015.to.pob.dist, 2, which.min)
+#> summary(apply(geog.2015.to.pob.dist, 2, min))
+#     Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
+#6.912e-05 2.697e-03 6.210e-03 1.139e-02 1.237e-02 2.696e-01
+# so max about 20 km apart. 3rd quartile is 1 km. Median is 0.5 km
+stopifnot(identical(rownames(geog.2015.to.pob.dist), as.character(1:nrow(geog.2015.to.pob.dist))))
+stopifnot(identical(names(geog.2015.to.pob.dist.min), as.character(1:length(geog.2015.to.pob.dist.min))))
+stopifnot(identical(pob.shp$EID, 1:nrow(pob.shp)))
+geog.2015.df.sp <- data.frame(geog.2015.df.sp@coords, geog.2015.df.sp@data)
+#colnames(geog.2015.df.sp) <- c("X", "Y")
+geog.2015.df.sp$EID <- unname(geog.2015.to.pob.dist.min)
+geog.2015.df.sp <- merge(geog.2015.df.sp, pob.shp[, !colnames(pob.shp) %in% c("X", "Y") ])
+
+# TODO: Must get the projection correct and then re-calculate
+
+geog.2015.df.sp$EID <- geog.2015.df.sp$X <- geog.2015.df.sp$Y <- NULL
+
+geog.2015.df <- merge(geog.2015.df, geog.2015.df.sp, all = TRUE)
+
+
+geog.2015.df$departamento <- with(geog.2015.df, { formatC(id_departamento, width = 2, flag = "0") } )
+geog.2015.df$provincia.full <- with(geog.2015.df, { paste0(formatC(id_departamento, width = 2, flag = "0"),
+  formatC(id_provincia, width = 2, flag = "0")) } )
+geog.2015.df$seccion.full <- with(geog.2015.df, { paste0(formatC(id_departamento, width = 2, flag = "0"),
+  formatC(id_provincia, width = 2, flag = "0"),
+  formatC(id_municipio, width = 2, flag = "0")) } )
+geog.2015.df$canton.full <- NA
+geog.2015.df$canton.full[!is.na(geog.2015.df$DEPTO)] <-
+    with(geog.2015.df[!is.na(geog.2015.df$DEPTO), ], { paste0(DEPTO, PROVIN, SECCION, CANTON) } )
+geog.2015.df$segmento.full <-
+with(geog.2015.df, { paste0(formatC(id_departamento, width = 2, flag = "0"),
+  formatC(id_provincia, width = 2, flag = "0"),
+  formatC(id_municipio, width = 2, flag = "0"),
+  upm) } )
+
+#impute.levels <- c("household", "segmento.full", "sector.full", "canton.full", "seccion.full", "provincia.full", "departamento", "nation")
+#input.price.columns <- c("x19.fertilizante.bs.kg", "x19.sem.comprada.bs.kg", "x19.abono.bs.kg", "x19.plagicidas.bs.kg")
+
+#stopifnot(all(ag.2015.df$id_persona %in% geog.2015.df$id_persona))
+ag.2015.df <- merge(ag.2015.df, geog.2015.df[, ! colnames(geog.2015.df) %in%
+  c("id_departamento", "nombredepartamento", "id_provincia", "provincia",
+  "id_municipio", "municipio")], all.x = TRUE)
+# about 411 of 29,000 observations in ag.2015.df do not appear in hh.2.2015.df, strangely
+
+ag.2015.df$departamento[is.na(ag.2015.df$departamento)] <- with(ag.2015.df[is.na(ag.2015.df$departamento), ],
+  { formatC(id_departamento, width = 2, flag = "0") } )
+ag.2015.df$provincia.full[is.na(ag.2015.df$provincia.full)] <- with(ag.2015.df[is.na(ag.2015.df$provincia.full), ],
+  { paste0(formatC(id_departamento, width = 2, flag = "0"),
+  formatC(id_provincia, width = 2, flag = "0")) } )
+ag.2015.df$seccion.full[is.na(ag.2015.df$seccion.full)] <- with(ag.2015.df[is.na(ag.2015.df$seccion.full), ],
+  { paste0(formatC(id_departamento, width = 2, flag = "0"),
+  formatC(id_provincia, width = 2, flag = "0"),
+  formatC(id_municipio, width = 2, flag = "0")) } )
+
+
 # We will have some locations that we can only get municipios for, such as the Area Censal UPMs.
 # For price imputation, we will start at the muni level. For lat and long, we will go for
 # some method with the "best" coordinates with pob.shp or something
 
 # The plan is to get the closest pob.shp village and adopt the canton of that village.
 # Then when it is time to impute prices, first get the closest village (by great circle distance) that has a price. Restrict
-# This search to only villages that are within the canton.
+# this search to only villages that are within the canton.
 # If there are no villages with a price that is within the canton, look at the muni level (muni level can come
 # from the original dataset).
 # Then continue on up the chain.
 
 
 
+# ag.2015.df
 
+# Ok the problem is that INE converted the 2008 quantity data to quintals from
+# their original units. They did not do this for 2015, so I have to convert it from the data available.
+# I should extract INE's implicit conversion factors from the 2008 data and then apply them to the 2015 data.
+
+by(inputs.df$x19.abono.cantidad / inputs.df$x19.abono.cantidad.quintal, INDICES = list(inputs.df$x19.abono.unidad), FUN = summary)
+by(inputs.df$x19.abono.cantidad.quintal / inputs.df$x19.abono.cantidad, INDICES = list(inputs.df$x19.abono.unidad), FUN = summary)
+
+inputs.df[inputs.df$x19.abono.unidad == "LITRO  (Lt)             ", c("x19.abono.cantidad.quintal", "x19.abono.cantidad")]
+
+table(inputs.df$x19.abono.unidad)
+table(ag.2015.df$cum_abo_org)
+
+
+by(inputs.df$x19.fertilizante.cantidad / inputs.df$x19.fertilizante.cantidad.quintal, INDICES = list(inputs.df$x19.fertilizante.unidad), FUN = summary)
+by(inputs.df$x19.fertilizante.cantidad.quintal / inputs.df$x19.fertilizante.cantidad, INDICES = list(inputs.df$x19.fertilizante.unidad), FUN = summary)
+
+
+inputs.df[inputs.df$x19.fertilizante.unidad == "LITRO  (Lt)             ", c("x19.fertilizante.cantidad.quintal", "x19.fertilizante.cantidad", "x19.fertilizante.unidad")]
+
+t(t(prop.table(table(inputs.df$x19.fertilizante.unidad))*100))
+
+by(inputs.df$x19.fertilizante.cantidad.quintal, INDICES = list(inputs.df$x19.fertilizante.unidad), FUN = summary)
+
+with(inputs.df[inputs.df$x19.fertilizante.cantidad.quintal > 0, ],
+  by(x19.fertilizante.cantidad.quintal / x19.superficie.cultivada.hectareas, INDICES = list(x19.fertilizante.unidad), FUN = summary))
+
+with(inputs.df[inputs.df$x19.fertilizante.cantidad.quintal > 0, ],
+    by(x19.fertilizante.bs.quintal , INDICES = list(x19.fertilizante.unidad), FUN = summary))
+
+with(inputs.df[inputs.df$x19.fertilizante.cantidad.quintal > 0, ],
+    by(x19.fertilizante.bs.unid, INDICES = list(x19.fertilizante.unidad), FUN = summary))
+
+litro.by.crop <- with(inputs.df[inputs.df$x19.fertilizante.cantidad.quintal > 0, ],
+  unclass(table(x19.cultivo, x19.fertilizante.unidad == "LITRO  (Lt)             ")))
+litro.by.crop <- litro.by.crop[order(litro.by.crop[, 1], decreasing = TRUE), ]
+litro.by.crop[1:20, ]
+prop.table(litro.by.crop[1:20, ], margin = 1)*100
+
+summary(lm( I(x19.fertilizante.unidad == "LITRO  (Lt)             ") ~ zona.agroproductiva + x19.fertilizante.bs.unid , data = inputs.df[inputs.df$x19.fertilizante.cantidad.quintal > 0, ]))
+
+
+
+
+library("quantreg")
+
+summary(rq(  log(x19.fertilizante.bs.quintal) ~ relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ") , tau = 0.5,
+data = inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad %in% c("ARROBA @                ", "KILO (Kg)               ",
+"LITRO  (Lt)             ", "QUINTAL (qq)            ", "LIBRA (Lb)              "), ]))
+# Value     Std. Error t value   Pr(>|t|)
+# (Intercept)                                                                            5.63479   0.02045  275.55152   0.00000
+# relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ")ARROBA @                   0.00000   0.02707    0.00000   1.00000
+# relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ")KILO (Kg)                  0.28947   0.08067    3.58815   0.00034
+# relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ")LIBRA (Lb)                 0.13353   0.09114    1.46519   0.14299
+# relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ")LITRO  (Lt)               -1.25276   0.02262  -55.37246   0.00000
 
 
 
 # TODO: Need to figure out this warning message:
 # "Unrecognized record type 7, subtype 18 encountered in system file"
 
-colnames(inputs.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(inputs.df, "variable.labels")) ) )
-
-
 # tar -zcvf projdir10-28.tar.gz /home/c/cschmidt/TravisImInYourInternets/gamsdir/projdir
+
+
+
 
 exclude.index <- is.na(inputs.df$x19.abono.cantidad.quintal) |
   inputs.df$x19.superficie.cultivada.hectareas==0
 # Small exclusion for now
 inputs.df <- inputs.df[!exclude.index, ]
+# TODO: Should I keep this exclude index?
+
+
+
+
 
 # Changing missing price data to zeros:
 inputs.df$x19.fertilizante.bs.quintal[is.na(inputs.df$x19.fertilizante.bs.quintal)] <- 0
@@ -399,6 +545,7 @@ geog.df <- read.spss(paste0(work.dir, "bd68/1-UBIGEO PRODUCTOR/1.-ENA08_BOLIVIA_
 
 colnames(geog.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(geog.df, "variable.labels")) ) )
 
+geog.df$departamento.full <- with(geog.df, { paste0(departamento) } )
 geog.df$provincia.full <- with(geog.df, { paste0(departamento, provincia) } )
 geog.df$seccion.full <- with(geog.df, { paste0(departamento, provincia, seccion.provincial) } )
 geog.df$canton.full <- with(geog.df, { paste0(departamento, provincia, seccion.provincial, canton) } )
@@ -406,8 +553,34 @@ geog.df$sector.full <- with(geog.df, { paste0(departamento, provincia, seccion.p
 geog.df$segmento.full <- with(geog.df, { paste0(departamento, provincia, seccion.provincial, canton, x6.sector, x7.segmento) } )
 
 
-inputs.df <- merge(inputs.df, geog.df[, c("folio", "provincia.full",
+inputs.df <- merge(inputs.df, geog.df[, c("folio", "departamento.full", "provincia.full",
   "seccion.full", "canton.full", "sector.full", "segmento.full"  )])
+
+
+
+fert.median.price.2015.agg <- aggregate(ag.2015.df$cost_abo_qui[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0],
+  by = list(ag.2015.df$seccion.full[ag.2015.df$cum_abo_qui == "Kilogramo "  & ag.2015.df$cost_abo_qui > 0]), FUN = median, na.rm = TRUE)
+
+fert.median.price.2015.agg$year <- "2015"
+
+fert.median.price.2008.agg <- aggregate(inputs.df$x19.fertilizante.bs.quintal[inputs.df$x19.fertilizante.bs.quintal > 0] / 46, #  * 1.4
+    by = list(inputs.df$seccion.full[inputs.df$x19.fertilizante.bs.quintal > 0]), FUN = median, na.rm = TRUE)
+
+fert.median.price.2008.agg$year <- "2008"
+
+fert.median.price.agg <- rbind(fert.median.price.2015.agg, fert.median.price.2008.agg)
+fert.median.price.agg <- fert.median.price.agg[fert.median.price.agg$Group.1 %in%
+  intersect(fert.median.price.2015.agg$Group.1, fert.median.price.2008.agg$Group.1), ]
+fert.median.price.agg$x.log <- log(fert.median.price.agg$x)
+library("ICC")
+ICCest(Group.1, x, data = fert.median.price.agg)
+ICCest(Group.1, x.log, data = fert.median.price.agg)
+
+summary(lm(x ~ Group.1 + year, data = fert.median.price.agg))
+
+fert.median.price.agg.wide <- merge(fert.median.price.2015.agg, fert.median.price.2008.agg, by = "Group.1")
+
+cor.test(fert.median.price.agg.wide$x.x, fert.median.price.agg.wide$x.y)
 
 
 # Imputing input prices below
