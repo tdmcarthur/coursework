@@ -9,11 +9,21 @@ inputs.df<- read.spss(paste0(work.dir, "bd68/2-AGRICOLA/Cultivos (Preg-19)/2.-EN
 
 colnames(inputs.df) <- tolower( make.names(gsub("[()]|[.]", "", attr(inputs.df, "variable.labels")) ) )
 
+inputs.df <- inputs.df[inputs.df$x19.mes.siembra %in% c("ENE  ", "JUL  ", "AGO  ", "SEP  ", "OCT  ", "NOV  ", "DIC  "), ]
+
+# Manual Encuestador for 2015 encuesta says:
+# La campana de verano inicia la siembra en julio de 2014 y finaliza en enero de 2015,
+# donde la cosecha se extiende hasta junio; la campaña de invierno cuya siembra comienza
+# en marzo de 2015 culminando en junio de 2015 y la cosecha se extiende hasta el mes de noviembre.
+
 
 ag.2015.df <- read.spss(paste0(work.dir,  "bd67/BD Spss/2.-Agricola/agricola verano e invierno.sav"), to.data.frame = TRUE)
 
-ag.2015.df <- ag.2015.df[(substr(ag.2015.df$cuestionario, 1, 3) == "ver"), ]
+ag.2015.df <- ag.2015.df[(substr(ag.2015.df$cuestionario, 1, 3) == "ver") &
+  ag.2015.df$messiembra %in% c("Enero",  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"), ]
 # Only take the verano survey
+# Even though many crops say they are in the verano survey, they were actually planted outside of verano, so
+# this is an additional fix. Verano is defined in the survey itself, at question part A.2 "CULTIVOS DE VERANO"
 
 ag.2015.df$cultiv <- gsub("(^ +)|( +$)", "", as.character(ag.2015.df$cultiv))
 
@@ -463,12 +473,35 @@ prop.table(litro.by.crop[1:20, ], margin = 1)*100
 
 summary(lm( I(x19.fertilizante.unidad == "LITRO  (Lt)             ") ~ zona.agroproductiva + x19.fertilizante.bs.unid , data = inputs.df[inputs.df$x19.fertilizante.cantidad.quintal > 0, ]))
 
+summary(lm( I(x19.fertilizante.unidad == "LITRO  (Lt)             ") ~ seccion.full + x19.fertilizante.bs.unid , data = inputs.df[inputs.df$x19.fertilizante.cantidad.quintal > 0, ]))
+
+summary(lm(  log(x19.fertilizante.bs.quintal) ~ seccion.full + relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ")  ,
+data = inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad %in% c("ARROBA @                ", "KILO (Kg)               ",
+"LITRO  (Lt)             ", "QUINTAL (qq)            ", "LIBRA (Lb)              "), ]))
+
+
+summary(test.lm <- lm(  log(x19.fertilizante.bs.quintal) ~  relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ")   ,
+data = inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad %in% c("ARROBA @                ", "KILO (Kg)               ",
+"LITRO  (Lt)             ", "QUINTAL (qq)            ", "LIBRA (Lb)              "), ]))
+
+inputs.df$x19.fertilizante.bs.quintal.resid <- NA
+inputs.df$x19.fertilizante.bs.quintal.resid[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad %in% c("ARROBA @                ", "KILO (Kg)               ",
+"LITRO  (Lt)             ", "QUINTAL (qq)            ", "LIBRA (Lb)              ") ] <- exp(resid(test.lm))
+
+summary(lm(log(x19.fertilizante.bs.quintal.resid) ~ seccion.full, data = inputs.df))
+
+with (inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad %in% c("ARROBA @                ", "KILO (Kg)               ",
+"LITRO  (Lt)             ", "QUINTAL (qq)            ", "LIBRA (Lb)              "), ],
+  chisq.test(table(as.character(provincia.full), as.character(x19.fertilizante.unidad)))
+)
+
+
 
 
 
 library("quantreg")
 
-summary(rq(  log(x19.fertilizante.bs.quintal) ~ relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ") , tau = 0.5,
+summary(fert.units.rq <- rq(  log(x19.fertilizante.bs.quintal) ~ relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ") , tau = 0.5,
 data = inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad %in% c("ARROBA @                ", "KILO (Kg)               ",
 "LITRO  (Lt)             ", "QUINTAL (qq)            ", "LIBRA (Lb)              "), ]))
 # Value     Std. Error t value   Pr(>|t|)
@@ -478,7 +511,12 @@ data = inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.ferti
 # relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ")LIBRA (Lb)                 0.13353   0.09114    1.46519   0.14299
 # relevel(x19.fertilizante.unidad, "QUINTAL (qq)            ")LITRO  (Lt)               -1.25276   0.02262  -55.37246   0.00000
 
+fert.units.null.rq <- rq(  log(x19.fertilizante.bs.quintal) ~ 1 , tau = 0.5,
+data = inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad %in% c("ARROBA @                ", "KILO (Kg)               ",
+"LITRO  (Lt)             ", "QUINTAL (qq)            ", "LIBRA (Lb)              "), ])
 
+# pseudo R-sq:
+1 - fert.units.rq$rho/fert.units.null.rq$rho
 
 # TODO: Need to figure out this warning message:
 # "Unrecognized record type 7, subtype 18 encountered in system file"
@@ -557,14 +595,27 @@ inputs.df <- merge(inputs.df, geog.df[, c("folio", "departamento.full", "provinc
   "seccion.full", "canton.full", "sector.full", "segmento.full"  )])
 
 
+#
 
+fert.median.price.2015.agg <- aggregate(ag.2015.df$cost_abo_org[ag.2015.df$cum_abo_org == "Quintal   " & ag.2015.df$cost_abo_org > 0],
+  by = list(ag.2015.df$canton.full[ag.2015.df$cum_abo_org == "Quintal   " & ag.2015.df$cost_abo_org > 0]), FUN = median, na.rm = TRUE)
+
+fert.median.price.2008.agg <- aggregate(inputs.df$x19.abono.bs.quintal[inputs.df$x19.abono.bs.quintal > 0  & inputs.df$x19.abono.unidad == "QUINTAL (qq)            "], # * 1.4 / 46, #  * 1.4
+    by = list(inputs.df$canton.full[inputs.df$x19.abono.bs.quintal > 0 & inputs.df$x19.abono.unidad == "QUINTAL (qq)            "]), FUN = median, na.rm = TRUE)
+
+
+
+
+# cost_abo_qui  "Kilogramo "  cost_abo_org "Quintal   "
 fert.median.price.2015.agg <- aggregate(ag.2015.df$cost_abo_qui[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0],
-  by = list(ag.2015.df$seccion.full[ag.2015.df$cum_abo_qui == "Kilogramo "  & ag.2015.df$cost_abo_qui > 0]), FUN = median, na.rm = TRUE)
+  by = list(ag.2015.df$canton.full[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0]), FUN = median, na.rm = TRUE)
+
+fert.median.price.2008.agg <- aggregate(inputs.df$x19.fertilizante.bs.quintal[inputs.df$x19.fertilizante.bs.quintal > 0  & inputs.df$x19.fertilizante.unidad == "QUINTAL (qq)            "] * 1.4 / 46, #  * 1.4
+    by = list(inputs.df$canton.full[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad == "QUINTAL (qq)            "]), FUN = median, na.rm = TRUE)
+# "ARROBA @                "
+# fertilizante
 
 fert.median.price.2015.agg$year <- "2015"
-
-fert.median.price.2008.agg <- aggregate(inputs.df$x19.fertilizante.bs.quintal[inputs.df$x19.fertilizante.bs.quintal > 0] / 46, #  * 1.4
-    by = list(inputs.df$seccion.full[inputs.df$x19.fertilizante.bs.quintal > 0]), FUN = median, na.rm = TRUE)
 
 fert.median.price.2008.agg$year <- "2008"
 
@@ -576,11 +627,117 @@ library("ICC")
 ICCest(Group.1, x, data = fert.median.price.agg)
 ICCest(Group.1, x.log, data = fert.median.price.agg)
 
+ICCest(seccion.full, cost_abo_qui, data = ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ])
+
+ICCest(seccion.full, x19.fertilizante.bs.quintal, data = inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0, ])
+
 summary(lm(x ~ Group.1 + year, data = fert.median.price.agg))
 
 fert.median.price.agg.wide <- merge(fert.median.price.2015.agg, fert.median.price.2008.agg, by = "Group.1")
 
 cor.test(fert.median.price.agg.wide$x.x, fert.median.price.agg.wide$x.y)
+
+summary(fert.median.price.agg.wide)
+
+table(ag.2015.df$seccion.full == substr(ag.2015.df$canton.full, 1, 6))
+
+
+summary(lm(cost_abo_org ~ seccion.full, data =
+  ag.2015.df[ag.2015.df$cum_abo_org == "Quintal   " & ag.2015.df$cost_abo_org > 0, ]))$adj.r.squared
+
+summary(lm(x19.abono.bs.quintal ~ seccion.full, data =
+  inputs.df[inputs.df$x19.abono.bs.quintal > 0 & inputs.df$x19.abono.unidad == "QUINTAL (qq)            ", ]))$adj.r.squared
+
+
+#
+summary(lm(log(cost_abo_org) ~ seccion.full, data =
+  ag.2015.df[ag.2015.df$cum_abo_org == "Quintal   " & ag.2015.df$cost_abo_org > 0, ]))$adj.r.squared
+
+summary(lm(log(x19.abono.bs.quintal) ~ seccion.full, data =
+  inputs.df[inputs.df$x19.abono.bs.quintal > 0 & inputs.df$x19.abono.unidad == "QUINTAL (qq)            ", ]))$adj.r.squared
+
+summary(ag.2015.df$cost_abo_org[ag.2015.df$cum_abo_org == "Quintal   " & ag.2015.df$cost_abo_org > 0])
+summary(inputs.df$x19.abono.bs.quintal[inputs.df$x19.abono.bs.quintal > 0 & inputs.df$x19.abono.unidad == "QUINTAL (qq)            "])
+
+#
+summary(lm(cost_abo_qui ~ seccion.full, data =
+  ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ]))$adj.r.squared
+
+summary(lm(x19.fertilizante.bs.quintal ~ seccion.full, data =
+  inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad == "QUINTAL (qq)            ", ]))$adj.r.squared
+
+#
+
+summary(lm(log(cost_abo_qui) ~ seccion.full, data =
+  ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ]))$adj.r.squared
+
+summary(lm(log(x19.fertilizante.bs.quintal) ~ seccion.full, data =
+  inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad == "QUINTAL (qq)            ", ]))$adj.r.squared
+
+summary(ag.2015.df$cost_abo_qui[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0])
+summary(inputs.df$x19.fertilizante.bs.quintal[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad == "QUINTAL (qq)            "] / 46)
+
+
+summary(lm(log(cost_abo_qui) ~ segmento.full, data =
+  ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ]))
+
+
+
+library("quantreg")
+
+fert.geog.rq <- rq( log(cost_abo_qui) ~ segmento.full, tau = 0.5, data =
+  ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ])
+
+
+fert.geog.null.rq <- rq( log(cost_abo_qui) ~ 1, tau = 0.5, data =
+  ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ])
+
+# pseudo R-sq:
+1 - fert.geog.rq$rho/fert.geog.null.rq$rho
+
+
+
+summary(lm(log(x19.fertilizante.bs.quintal) ~ segmento.full, data =
+  inputs.df[inputs.df$x19.fertilizante.bs.quintal > 0 & inputs.df$x19.fertilizante.unidad == "QUINTAL (qq)            ", ]))$adj.r.squared
+
+
+person.price.var.agg <- aggregate(cost_abo_qui ~ id_persona, data = ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0 , ], FUN = var)
+person.price.var.agg <- person.price.var.agg[!is.na(person.price.var.agg$cost_abo_qui), ]
+summary(person.price.var.agg$cost_abo_qui)
+
+
+ag.2015.df[ag.2015.df$id_persona == 12371, ]
+# ID: 12371
+# extremely weird pricing calculations: 13279
+# 9962
+# over a dozen plots and uses different fertilizers, and sometimes multiple types per plot. Is a sugar cane farmer. However, not in the verano subsample: 6405
+# Slight difference due to two different seasons: 3220
+
+
+library("quantreg")
+
+fert.geog.rq <- rq( log(cost_abo_qui) ~ segmento.full, tau = 0.5, data =
+  ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ])
+
+
+fert.geog.null.rq <- rq( log(cost_abo_qui) ~ 1, tau = 0.5, data =
+  ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ])
+
+# pseudo R-sq:
+1 - fert.geog.rq$rho/fert.geog.null.rq$rho
+
+
+by(ag.2015.df$cost_abo_qui, INDICES = list(ag.2015.df$cum_abo_qui ), FUN = summary)
+
+
+
+
+
+
+
+
+summary(lm(log(cost_abo_qui) ~ abo_qui + seccion.full, data =
+  ag.2015.df[ag.2015.df$cum_abo_qui == "Kilogramo " & ag.2015.df$cost_abo_qui > 0, ]))$adj.r.squared
 
 
 # Imputing input prices below
